@@ -38,7 +38,7 @@ form {
 }
 
 .formpart {
-	border: 1px solid var(--bluey);
+	
 	border-radius: 10px;
 	margin-top: 10px;
 	padding: 2vh 2vw 2vh 2vw;
@@ -46,9 +46,16 @@ form {
 
 #keysetter {
 	display: grid;
+	border: 1px solid var(--bluey);
+	border-left: 10vw solid var(--bluey);
 	row-gap: 2vh;
 	grid-template-columns: 1fr 1fr 1fr;
 	padding: 2vh 2vw 2vh 2vw;
+}
+
+#commandsetter {
+	border: 1px solid var(--butterscotch);
+	border-left: 10vw solid var(--butterscotch);
 }
 
 .sectiontitle {
@@ -59,6 +66,20 @@ form {
 
 button, select {
 	margin-left: 1vw;
+}
+
+button {
+	
+	border: none;
+	border-radius: 25px;
+	font-family: Antonio, Arial, Helvetica, sans-serif;
+	padding: 1vh;
+	background-color: var(--butterscotch);
+	color: #000;
+}
+
+button:active {
+	background-color: rgba(255, 153, 102, 0.5);
 }
 
 #ctrlblock {
@@ -106,6 +127,11 @@ button, select {
 }
 .removeitembutton {
 	grid-column: 2;
+}
+
+#keybindsummary {
+	border: 1px solid var(--gray);
+	border-left: 10vw solid var(--gray);
 }
 
 a {

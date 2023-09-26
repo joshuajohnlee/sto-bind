@@ -150,7 +150,7 @@ export default function Editor() {
     function handleCopyString(e) {
         e.preventDefault()
         navigator.clipboard.writeText(bindString)
-        toast.success('Copied! (Except it doesn\'t do anything yet so you just copied "Test")', {
+        toast.success('Copied! (Except it doesn\'t do anything yet so you just copied a test.)', {
             position: "bottom-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -167,14 +167,30 @@ export default function Editor() {
     function saveCommand(e) {
         e.preventDefault()
         setSavedCommandsList([...savedCommandsList, {"name": {bindName}, "command": {confirmedCommands}}])
+        saveToLocalStorage()
     }
 
     function saveToLocalStorage() {
-        localStorage.removeItem('savedbinds');
         localStorage.setItem('savedbinds', JSON.stringify(savedCommandsList));
     }
 
-    useEffect(saveToLocalStorage, [savedCommandsList])
+    function deleteSavedCommands(e) {
+        e.preventDefault()
+    
+        if (window.confirm("Are you sure you want to delete the saved key binds?") == true) {
+            localStorage.removeItem('savedbinds');
+            toast.success('Your saved keybinds were deleted.)', {
+                position: "bottom-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            })
+        }
+    }
 
     return (
         <>
@@ -229,7 +245,7 @@ export default function Editor() {
                     </section>
 
                     <section id="commandsetter" className="formpart">
-                        <h3>Set the commands to run</h3>
+                        <h3>Step Two: Set the commands to run</h3>
                         <label htmlFor="commandselector">Choose a command:</label>
                         <select name="commandselector" value={currentSelectedCommand} onChange={handleCommandChange}>
                             {commandList.map(x => <option value={x} key={x}>{x}</option>)}
@@ -290,10 +306,16 @@ export default function Editor() {
 
                     <section id="keybindsummary" className="formpart">
                         <h3>Name and save your keybind</h3>
-                        Keybind name: <input type="text" onChange={handleNameChange} value={bindName}></input><br />
+                        Keybind name: <input type="text" onChange={handleNameChange} value={bindName}></input><br /><br />
 
-                        <button onClick={handleCopyString}>Copy bind string</button>
+                        Stored keybinds: {
+                        savedCommandsList.map((item) => <>{item.bindName}</>
+                        )
+                        }
+
+                        <button onClick={handleCopyString}>Copy keybind string</button>
                         <button onClick={saveCommand}>Save keybind to your binds list</button>
+                        <button onClick={deleteSavedCommands}>Delete all saved bindings</button>
                     </section>
                 </form>
             </div>
