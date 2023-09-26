@@ -1,0 +1,29 @@
+@charset "utf-8";
+
+/* Uses https://www.thelcars.com/colors.php as a reference */
+
+:root {
+	--space-white: #f5f6fa;
+	--violet-creme: #dbf;
+	--magenta: #c49;
+	--green: #3c9;
+	--blue: #45f;
+	--yellow: #fc3;
+	--sunflower: #fc6;
+	--violet: #94f;
+	--orange: #f70;
+	--african-violet: #c8f;
+	--red: #d44;
+	--almond: #ffaa90;
+	--almond-creme: #fba;
+	--bluey: #78f;
+	--gray: #668;
+	--sky: #aaf;
+	--ice: #8cf;
+	--gold: #fa0;
+	--mars: #f20;
+	--peach: #f86;
+	--butterscotch: #f96;
+	--tomato: #f55;
+	--lilac: #c3f;
+}
