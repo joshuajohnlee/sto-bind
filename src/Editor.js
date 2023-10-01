@@ -6,10 +6,8 @@ let commands = require('./data/commands.json');
 
 var commandList = []
 
-Object.keys(commands).forEach(function (commandtype) {
-    Object.keys(commands[commandtype]).forEach(function (key) {
-        commandList.push(key);
-    });
+Object.keys(commands).forEach(function (command) {
+    commandList.push(command);
 })
 
 // Load and process data for keyboard/mouse/controller keys
@@ -23,7 +21,23 @@ Object.keys(keys).forEach(function (keytype) {
 
 export default function Editor() {
 
-    // State creation //
+    // Warning before trying to leave page
+
+    useEffect(() => {
+        window.addEventListener('beforeunload', alertUser)
+        return () => {
+            window.removeEventListener('beforeunload', alertUser)
+        }
+    }, [])
+
+    const alertUser = e => {
+        e.preventDefault()
+        e.returnValue = ''
+    }
+
+    //                //
+    // STATE CREATION //
+    //                //
 
     const [currentSelectedCommand, setCurrentSelectedCommand] = useState("Execute a power by name");
     const [confirmedCommands, setConfirmedCommands] = useState([]);
@@ -31,7 +45,7 @@ export default function Editor() {
     const [ctrlSetting, setCtrlSetting] = useState("fornoctrl");
     const [shiftSetting, setShiftSetting] = useState("fornoshift");
     const [altSetting, setAltSetting] = useState("fornoalt");
-    const [keySetting, setKeySetting] = useState("Space bar");
+    const [keySetting, setKeySetting] = useState("");
     const [trayNumber, setTrayNumber] = useState(1)
     const [slotNumber, setSlotNumber] = useState(1)
     const [startSlotNumber, setStartSlotNumber] = useState(1)
@@ -40,11 +54,30 @@ export default function Editor() {
     const [throttleAdjust, setThrottleAdjust] = useState(0)
     const [charOrKey, setCharOrKey] = useState("char")
     const [savedKeybinds, setSavedKeybinds] = useState([])
+    const [finalString, setFinalString] = useState([])
 
-    //                            //
-    //  BUTTON AND FORM HANDLERS  //
-    //                            //
+    //                     //
+    //  HANDLER FUNCTIONS  //
+    //                     //
 
+    function setDefaults() {
+        setCurrentSelectedCommand("Execute a power by name");
+        setConfirmedCommands([]);
+        setBindName("");
+        setCtrlSetting("fornoctrl");
+        setShiftSetting("fornoshift");
+        setAltSetting("fornoalt");
+        setKeySetting("Space bar");
+        setTrayNumber(1);
+        setSlotNumber(1);
+        setStartSlotNumber(1);
+        setEndSlotNumber(1);
+        setPowerName("");
+        setThrottleAdjust(0);
+        setCharOrKey("char")
+    }
+
+    // Special cases for certain commands that require special data to work, otherwise add the command.
     function handleAddCommand(e) {
         e.preventDefault();
 
@@ -151,44 +184,36 @@ export default function Editor() {
             setKeySetting("")
             setCharOrKey("char")
         }
-
-    }
-    // Warning before trying to leave page
-
-    useEffect(() => {
-        window.addEventListener('beforeunload', alertUser)
-        return () => {
-            window.removeEventListener('beforeunload', alertUser)
-        }
-    }, [])
-
-    const alertUser = e => {
-        e.preventDefault()
-        e.returnValue = ''
     }
 
     // Create bind string functions
 
-    // function handleCopyString(e) {
-    //     e.preventDefault()
-    //     navigator.clipboard.writeText(bindString)
-    //     toast.success('Copied! (Except it doesn\'t do anything yet so you just copied a test.)', {
-    //         position: "bottom-right",
-    //         autoClose: 5000,
-    //         hideProgressBar: false,
-    //         closeOnClick: true,
-    //         pauseOnHover: true,
-    //         draggable: true,
-    //         progress: undefined,
-    //         theme: "dark",
-    //     });
-    // }
+    function handleCopyString(e) {
+        e.preventDefault()
+        console.log("Trying to print the final string:")
+        console.log(finalString)
+        navigator.clipboard.writeText(finalString)
+        toast.success('Copied! (Except it doesn\'t do anything yet so you just copied a test.)', {
+            position: "bottom-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "dark",
+        });
+    }
 
     function buildABind() {
-        let fullbindtoreturn = []
-        for (let singlecommand in savedKeybinds) {
+
+        let fullbindtoreturn = ""
+
+        for (const savedBindIndex in savedKeybinds) {
+
             let thiscommandbind = "/bind "
-            switch (singlecommand.ctrlsetting) {
+
+            switch (savedKeybinds[savedBindIndex].ctrlsetting) {
                 case "fornoctrl":
                     break;
                 case "leftctrl":
@@ -204,7 +229,7 @@ export default function Editor() {
                     break;
             }
 
-            switch (singlecommand.shiftsetting) {
+            switch (savedKeybinds[savedBindIndex].shiftsetting) {
                 case "fornoshift":
                     break;
                 case "leftshift":
@@ -220,7 +245,7 @@ export default function Editor() {
                     break;
             }
 
-            switch (singlecommand.altsetting) {
+            switch (savedKeybinds[savedBindIndex].altsetting) {
                 case "fornoalt":
                     break;
                 case "leftalt":
@@ -236,16 +261,63 @@ export default function Editor() {
                     break;
             }
 
-            thiscommandbind += keys[singlecommand.keysetting];
+            console.log(keys[savedKeybinds[savedBindIndex].keysetting]);
 
-            //Still need to add the actual command syntax here.
+            if (typeof keys[savedKeybinds[savedBindIndex].keysetting] !== "undefined") {
+                thiscommandbind += keys[savedKeybinds[savedBindIndex].keysetting];
+            } else {
+                thiscommandbind += savedKeybinds[savedBindIndex].keysetting
+            }
 
-            fullbindtoreturn.push(thiscommandbind);
+            thiscommandbind += " \""
+
+            for (let savedCommandIndex in confirmedCommands) {
+                if (confirmedCommands[savedCommandIndex].command === "Execute a single tray command") {
+                    let builtstring = "" + commandList[confirmedCommands[savedCommandIndex].command] + confirmedCommands[savedCommandIndex].traynumber + confirmedCommands[savedCommandIndex].slotnumber
+                    thiscommandbind += builtstring
+                    break;
+                } else if (confirmedCommands[savedCommandIndex].command === "Execute a power by name") {
+                    let builtstring = commandList[confirmedCommands[savedCommandIndex].command] + confirmedCommands[savedCommandIndex].powername
+                    thiscommandbind += builtstring;
+                    break;
+                } else if (confirmedCommands[savedCommandIndex].command === "Execute a partial tray") {
+                    let builtstring = ""
+                    for (let i = confirmedCommands[savedCommandIndex].startslotnumber - 1; i < confirmedCommands[savedCommandIndex].endslotnumber; i++) {
+                        builtstring += "+TrayExecByTray "
+                        builtstring += confirmedCommands[savedCommandIndex].traynumber + i;
+                    }
+                    thiscommandbind += builtstring
+                    break;
+                } else if (currentSelectedCommand === "Execute a full tray") {
+                    let builtstring = ""
+                    for (let i = 0; i <= confirmedCommands[savedCommandIndex].endslotnumber; i++) {
+                        builtstring += "+TrayExecByTray "
+                        builtstring += confirmedCommands[savedCommandIndex].traynumber + i;
+                    }
+                    thiscommandbind += builtstring
+                    break;
+                } else if (currentSelectedCommand === "Adjust throttle by percentage") {
+                    let builtstring = "throttleadjust " + confirmedCommands[savedCommandIndex].throttleadjust / 100
+                    thiscommandbind += builtstring
+                    break;
+                } else {
+                    console.log("Trying to find the following as a key in the command list:")
+                    console.log(confirmedCommands[savedCommandIndex].command)
+                    console.log("Which returned:")
+                    console.log(commands[confirmedCommands[savedCommandIndex].command])
+
+                    thiscommandbind += commands[confirmedCommands[savedCommandIndex].command]
+                }
+            }
+
+            thiscommandbind += "\"\n"
+            fullbindtoreturn += thiscommandbind
         }
 
-        return(fullbindtoreturn);
+        setFinalString(fullbindtoreturn)
     }
 
+    // Check bind name isn't empty, commands to add aren't empty, and that there is a key to bind
     function handleSaveKeybind(e) {
         e.preventDefault();
 
@@ -268,16 +340,24 @@ export default function Editor() {
                 "keysetting": keySetting
             }
             setSavedKeybinds([...savedKeybinds, keybindToSave])
-            toast("Bind was saved!")
-            console.log("Saved a command, object is:")
-            console.log(keybindToSave)
+            toast("Bind was saved as " + bindName)
+            buildABind();
+            setDefaults();
         }
+
+
     }
 
+    // Each delete keybind button has the bind name as the value
+    // Filter existing keybinds to remove those matching the keybind name 
     function handleDeleteSavedKeybind(e) {
         e.preventDefault()
+        let bindsurvivingdelete = savedKeybinds.filter(x => x.bindname !== e.target.value)
+        setSavedKeybinds(bindsurvivingdelete)
+        buildABind();
     }
 
+    // Return the page
     return (
         <>
             <div id="editorcontainer">
@@ -326,7 +406,7 @@ export default function Editor() {
 
                             {charOrKey === "char" && <>
                                 <label htmlFor='keyselector'>Enter a number or letter (lowercase or uppercase): </label>
-                                <input type="text" name="keyselector" maxlength="1" onChange={(e) => setKeySetting(e.target.value)} />
+                                <input type="text" name="keyselector" maxLength="1" onChange={(e) => setKeySetting(e.target.value)} />
                             </>}
 
 
@@ -408,7 +488,7 @@ export default function Editor() {
                                         {item.command === "Execute a power by name" && <> - Power name: {item.powername}</>}
                                         {item.command === "Adjust throttle by percentage" && <> - Throttle Percentage change {item.throttleadjust}%</>}
                                     </span>
-                                    <button className="removeitembutton" data-traynumber={item.traynumber} data-startslotnumber={item.startslotnumber} data-endslotnumber={item.endslotnumber} data-powername={item.powername} data-slotnumber={item.slotnumber} value={item.command} onClick={handleRemoveCommand}>Remove</button><br />
+                                    <button className="removeitembutton" key={item.command} data-traynumber={item.traynumber} data-startslotnumber={item.startslotnumber} data-endslotnumber={item.endslotnumber} data-powername={item.powername} data-slotnumber={item.slotnumber} value={item.command} onClick={handleRemoveCommand}>Remove</button><br />
                                 </>)
                             }
                         </div>
@@ -423,10 +503,16 @@ export default function Editor() {
                         {savedKeybinds.map((item) =>
                             <>
                                 <br />
-                                <span className="savedkeybinddetails">{item.bindName}</span>
-                                <button className="removeitembutton" onClick={handleDeleteSavedKeybind}>Remove</button><br />
+                                <span className="savedkeybinddetails">{item.bindname}</span>
+                                <button className="removeitembutton" value={item.bindname} key={item.bindname} onClick={handleDeleteSavedKeybind}>Remove</button><br />
                             </>)
                         }
+
+                        <div id="finalstring">
+                            {finalString}
+                        </div>
+
+                        <button onClick={handleCopyString}>Copy Bind String</button>
                     </section>
                 </form>
             </div>
