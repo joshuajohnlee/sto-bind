@@ -30,7 +30,7 @@ export default function Editor() {
     const [bindName, setBindName] = useState("");
     const [ctrlSetting, setCtrlSetting] = useState("fornoctrl");
     const [shiftSetting, setShiftSetting] = useState("fornoshift");
-    const [altSetting, setAltSetting] = useState("fornoshift");
+    const [altSetting, setAltSetting] = useState("fornoalt");
     const [keySetting, setKeySetting] = useState("Space bar");
     const [trayNumber, setTrayNumber] = useState(1)
     const [slotNumber, setSlotNumber] = useState(1)
@@ -39,6 +39,7 @@ export default function Editor() {
     const [powerName, setPowerName] = useState("")
     const [throttleAdjust, setThrottleAdjust] = useState(0)
     const [charOrKey, setCharOrKey] = useState("char")
+    const [savedKeybinds, setSavedKeybinds] = useState([])
 
     //                            //
     //  BUTTON AND FORM HANDLERS  //
@@ -74,6 +75,7 @@ export default function Editor() {
             if (alreadyexists) {
                 return
             } else {
+                console.log(currentSelectedCommand);
                 setConfirmedCommands([...confirmedCommands, { "command": currentSelectedCommand }])
             }
         }
@@ -181,6 +183,100 @@ export default function Editor() {
     //         theme: "dark",
     //     });
     // }
+
+    function buildABind() {
+        let fullbindtoreturn = []
+        for (let singlecommand in savedKeybinds) {
+            let thiscommandbind = "/bind "
+            switch (singlecommand.ctrlsetting) {
+                case "fornoctrl":
+                    break;
+                case "leftctrl":
+                    thiscommandbind += "LCTRL+"
+                    break;
+                case "rightctrl":
+                    thiscommandbind += "RCTRL+"
+                    break;
+                case "anyctrl":
+                    thiscommandbind += "Control+"
+                    break;
+                default:
+                    break;
+            }
+
+            switch (singlecommand.shiftsetting) {
+                case "fornoshift":
+                    break;
+                case "leftshift":
+                    thiscommandbind += "LShift+"
+                    break;
+                case "rightctrl":
+                    thiscommandbind += "RShift+"
+                    break;
+                case "anyctrl":
+                    thiscommandbind += "Shift+"
+                    break;
+                default:
+                    break;
+            }
+
+            switch (singlecommand.altsetting) {
+                case "fornoalt":
+                    break;
+                case "leftalt":
+                    thiscommandbind += "LAlt+"
+                    break;
+                case "rightalt":
+                    thiscommandbind += "RAlt+"
+                    break;
+                case "anyalt":
+                    thiscommandbind += "Alt+"
+                    break;
+                default:
+                    break;
+            }
+
+            thiscommandbind += keys[singlecommand.keysetting];
+
+            //Still need to add the actual command syntax here.
+
+            fullbindtoreturn.push(thiscommandbind);
+        }
+
+        return(fullbindtoreturn);
+    }
+
+    function handleSaveKeybind(e) {
+        e.preventDefault();
+
+        if (bindName === "") {
+            alert("You haven't given your keybind a name!");
+            return;
+        } else if (confirmedCommands.length === 0) {
+            alert("There are no commands to save!")
+            return;
+        } else if (keySetting === "") {
+            alert("No key was selected!")
+            return;
+        } else {
+            let keybindToSave = {
+                "bindname": bindName,
+                "runcommands": confirmedCommands,
+                "ctrlsetting": ctrlSetting,
+                "shiftsetting": shiftSetting,
+                "altsetting": altSetting,
+                "keysetting": keySetting
+            }
+            setSavedKeybinds([...savedKeybinds, keybindToSave])
+            toast("Bind was saved!")
+            console.log("Saved a command, object is:")
+            console.log(keybindToSave)
+        }
+    }
+
+    function handleDeleteSavedKeybind(e) {
+        e.preventDefault()
+    }
 
     return (
         <>
@@ -298,7 +394,7 @@ export default function Editor() {
                             </>
                         }
 
-                        <button onClick={handleAddCommand}>Add command to this keybind</button>
+                        <button onClick={handleAddCommand}>Add this command to the keybind</button>
                         <br />
                         <div id="currentcommandslist">
                             <h4>Commands to be added to this keybind:</h4>
@@ -322,6 +418,15 @@ export default function Editor() {
                     <section id="keybindsummary" className="formpart">
                         <h3>Name and save your keybind</h3>
                         Keybind name: <input type="text" onChange={(e) => setBindName(e.target.value)} value={bindName}></input><br /><br />
+                        <button onClick={handleSaveKeybind}>Save this keybind</button>
+
+                        {savedKeybinds.map((item) =>
+                            <>
+                                <br />
+                                <span className="savedkeybinddetails">{item.bindName}</span>
+                                <button className="removeitembutton" onClick={handleDeleteSavedKeybind}>Remove</button><br />
+                            </>)
+                        }
                     </section>
                 </form>
             </div>

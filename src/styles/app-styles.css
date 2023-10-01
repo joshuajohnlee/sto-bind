@@ -69,13 +69,15 @@ button, select {
 }
 
 button {
-	
 	border: none;
 	border-radius: 25px;
 	font-family: Antonio, Arial, Helvetica, sans-serif;
-	padding: 1vh;
-	background-color: var(--butterscotch);
-	color: #000;
+	padding: 0 1vw 0 1vw;
+	border-left: 15px solid var(--butterscotch);
+	border-right: 15px solid var(--butterscotch);
+	text-transform: uppercase;
+	background: none;
+	color: var(--violet);
 }
 
 button:active {
@@ -117,7 +119,7 @@ button:active {
 #currentcommandslist {
 	display: grid;
 	row-gap: 1vh;
-	width: 50%;
+	width: 80%;
 	grid-template-columns: 2fr 1fr;
 }
 
