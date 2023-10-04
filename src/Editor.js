@@ -22,7 +22,6 @@ Object.keys(keys).forEach(function (keytype) {
 export default function Editor() {
 
     // Warning before trying to leave page
-
     useEffect(() => {
         window.addEventListener('beforeunload', alertUser)
         return () => {
@@ -53,8 +52,14 @@ export default function Editor() {
     const [powerName, setPowerName] = useState("")
     const [throttleAdjust, setThrottleAdjust] = useState(0)
     const [charOrKey, setCharOrKey] = useState("char")
-    const [savedKeybinds, setSavedKeybinds] = useState([])
     const [finalString, setFinalString] = useState([])
+
+    // Get saved keybinds from local storage or create empty array
+    
+    const [savedKeybinds, setSavedKeybinds] = useState(() => {
+        const savedBinds = window.localStorage.getItem("savedKeybinds");
+        return savedBinds !== null ? JSON.parse(savedBinds) : [];
+    })
 
     //                     //
     //  HANDLER FUNCTIONS  //
@@ -317,17 +322,16 @@ export default function Editor() {
         setFinalString(fullbindtoreturn)
     }
 
-    // Check bind name isn't empty, commands to add aren't empty, and that there is a key to bind
     function handleSaveKeybind(e) {
         e.preventDefault();
 
-        if (bindName === "") {
+        if (bindName === "") { // Check keybind name not empty
             alert("You haven't given your keybind a name!");
             return;
-        } else if (confirmedCommands.length === 0) {
+        } else if (confirmedCommands.length === 0) { // Check there are actually commands for the keybind
             alert("There are no commands to save!")
             return;
-        } else if (keySetting === "") {
+        } else if (keySetting === "") { // Check there was a key given to bind to
             alert("No key was selected!")
             return;
         } else {
@@ -339,21 +343,24 @@ export default function Editor() {
                 "altsetting": altSetting,
                 "keysetting": keySetting
             }
-            setSavedKeybinds([...savedKeybinds, keybindToSave])
-            toast("Bind was saved as " + bindName)
-            buildABind();
-            setDefaults();
+            let newKeyBinds = [...savedKeybinds, keybindToSave]
+            setSavedKeybinds(newKeyBinds);
+            toast("Bind was saved as " + bindName);
+            buildABind(); // Update the bind string
+            setDefaults(); // Reset the form to default values for next keybind
         }
-
-
     }
+
+    useEffect(() => {localStorage.setItem("savedKeybinds", JSON.stringify(savedKeybinds))}, [savedKeybinds])
 
     // Each delete keybind button has the bind name as the value
     // Filter existing keybinds to remove those matching the keybind name 
     function handleDeleteSavedKeybind(e) {
         e.preventDefault()
-        let bindsurvivingdelete = savedKeybinds.filter(x => x.bindname !== e.target.value)
-        setSavedKeybinds(bindsurvivingdelete)
+        let bindsSurvivingDelete = savedKeybinds.filter(x => x.bindname !== e.target.value)
+        setSavedKeybinds(bindsSurvivingDelete);
+        localStorage.removeItem("savedKeybinds");
+        localStorage.setItem("savedKeybinds", JSON.stringify(savedKeybinds));
         buildABind();
     }
 
