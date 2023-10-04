@@ -1,5 +1,6 @@
 @charset "utf-8";
 @import "./lcars-colors.css";
+@import url('https://fonts.googleapis.com/css?family=Nunito+Sans:light,regular,bold,italic&subset=latin,latin-ext');
 
 :root {
 	font-size: 1.5rem;
@@ -59,9 +60,10 @@ form {
 }
 
 .sectiontitle {
+	font-family: 'Antonio', Arial, Helvetica, sans-serif;
 	grid-row: 1;
 	grid-column-start: 1;
-	grid-column-end: 3;
+	grid-column-end: -1;
 }
 
 button, select {
@@ -154,7 +156,6 @@ a:active {
 }
 
 #editorcontainer {
-	padding-top: 2vw;
 	padding-bottom: 50px;
 	margin: 2vh 5vw 2vh 5vw;
 }
@@ -173,7 +174,7 @@ h1 {
 
 h2 {
 	font-size: 1.5rem;
-	color: var(--violet-creme);
+	color: var(--butterscotch);
 }
 
 h3 {
@@ -187,8 +188,10 @@ h4 {
 }
 
 p {
+	font-family: 'Nunito Sans', Arial, Helvetica, sans-serif;
+	font-size: medium;
 	margin-block: 1rem;
-	color: var(--sunflower);
+	color: #FFF;
 }
 
 nav {
@@ -229,4 +232,18 @@ nav a:active {
 #nav4 {
 	background-color: var(--bluey);
 	border-radius: 0 20px 20px 0;
+}
+
+.basiccontentcontainer {
+	margin: 2vh 2vw 2vh 2vw;
+}
+
+.inline-warning {
+	border-left: 15px solid var(--mars);
+	border-right: 15px solid var(--mars);
+	border-radius: 25px;
+	font-family: 'Nunito Sans', Arial, Helvetica, sans-serif;
+	padding: 1vh 1vw 1vh 1vw;
+	background-color: rgb(29, 8, 8);
+	margin: 1vh auto 1vh;
 }

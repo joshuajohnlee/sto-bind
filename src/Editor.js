@@ -363,10 +363,10 @@ export default function Editor() {
             <div id="editorcontainer">
                 <form className="editorform">
 
-                    <h2>Build your keybind</h2>
+                    <h1>Build your keybind</h1>
 
                     <section id="keysetter" className="formpart">
-                        <h3 className="sectiontitle"> Step one: select the key combination to use</h3>
+                        <h2 className="sectiontitle"> Step one: select the key combination to use</h2>
                         <div id="ctrlblock">
                             <label htmlFor='ctrlsetting'>CTRL Key:</label>
                             <fieldset name="ctrlsetting">
@@ -425,7 +425,7 @@ export default function Editor() {
                     </section>
 
                     <section id="commandsetter" className="formpart">
-                        <h3>Step Two: Set the commands to run</h3>
+                        <h2 className="sectiontitle">Step Two: Set the commands to run</h2>
                         <label htmlFor="commandselector">Choose a command:</label>
                         <select name="commandselector" value={currentSelectedCommand} onChange={(e) => setCurrentSelectedCommand(e.target.value)}>
                             {commandList.map(x => <option value={x} key={x}>{x}</option>)}
@@ -496,7 +496,7 @@ export default function Editor() {
                     </section>
 
                     <section id="keybindsummary" className="formpart">
-                        <h3>Name and save your keybind</h3>
+                        <h2 className="sectiontitle">Name and save your keybind</h2>
                         Keybind name: <input type="text" onChange={(e) => setBindName(e.target.value)} value={bindName}></input><br /><br />
                         <button onClick={handleSaveKeybind}>Save this keybind</button>
 

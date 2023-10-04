@@ -4,8 +4,10 @@ import Home from './Home';
 import {HashRouter, Route, Routes} from 'react-router-dom';
 import Editor from './Editor';
 import Navbar from './Navbar';
+import Help from './Help';
 import './styles/lcars-colors.css';
 import './styles/app-styles.css';
+import Tips from './Tips';
 
 const Routing = () => {
   return(
@@ -14,6 +16,8 @@ const Routing = () => {
         <Route index element={<Home />} />
         <Route path="/sto-bind" element={<Home />} />
         <Route path="/editor" element={<Editor />} />
+        <Route path="/tips" element={<Tips />} />
+        <Route path="/help" element={<Help />} />
       </Routes>
     </HashRouter>
   )
