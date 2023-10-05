@@ -138,6 +138,11 @@ button:active {
 	border-left: 10vw solid var(--gray);
 }
 
+#exportsection {
+	border: 1px solid var(--gray);
+	border-left: 10vw solid var(--gray);
+}
+
 a {
 	color: #c3f;
 	text-decoration: underline;
@@ -174,12 +179,14 @@ h1 {
 
 h2 {
 	font-size: 1.5rem;
+	font-family: "Antonio", Arial, Helvetica, sans-serif;
 	color: var(--butterscotch);
 }
 
 h3 {
 	font-size: 1rem;
-	color: var(--yellow);
+	font-family: "Antonio", Arial, Helvetica, sans-serif;
+	color: var(--african-violet);
 }
 
 h4 {
@@ -246,4 +253,24 @@ nav a:active {
 	padding: 1vh 1vw 1vh 1vw;
 	background-color: rgb(29, 8, 8);
 	margin: 1vh auto 1vh;
+}
+
+#savedcommandtable {
+	width: 100%;
+	text-align: left;
+}
+
+#bindmodesetter {
+	display: grid;
+	text-align: left;
+	width: 100%;
+	grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+pre {
+	background-color: #333;
+	border: dotted white 1px;
+	margin: 1vh 2vw 1vh 2vw;
+	padding: 1vh 1vw 1vh 1vw;
+	color: white;
 }

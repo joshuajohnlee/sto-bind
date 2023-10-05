@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-let commands = require('./data/commands.json');
+const commands = require('./data/commands.json');
 
 var commandList = []
 
@@ -11,10 +11,10 @@ Object.keys(commands).forEach(function (command) {
 })
 
 // Load and process data for keyboard/mouse/controller keys
-let keys = require('./data/keys.json');
+const keypresses = require('./data/keys.json');
 var keyList = []
-Object.keys(keys).forEach(function (keytype) {
-    Object.keys(keys[keytype]).forEach(function (key) {
+Object.keys(keypresses).forEach(function (keytype) {
+    Object.keys(keypresses[keytype]).forEach(function (key) {
         keyList.push(key);
     });
 })
@@ -38,47 +38,75 @@ export default function Editor() {
     // STATE CREATION //
     //                //
 
-    const [currentSelectedCommand, setCurrentSelectedCommand] = useState("Execute a power by name");
-    const [confirmedCommands, setConfirmedCommands] = useState([]);
+    const [keySettings, setKeySettings] = useState({
+        "ctrl": "fornoctrl",
+        "shift": "fornoshift",
+        "alt": "fornoalt",
+        "keypress": ""
+    });
+
+    const [commandSettings, setCommandSettings] = useState({
+        "commandname": "Fire all weapons",
+        "traynumber": null,
+        "slotnumber": null,
+        "startslotnumber": null,
+        "endslotnumber": null,
+        "powername": null,
+        "throttleadjust": null
+    })
+
     const [bindName, setBindName] = useState("");
-    const [ctrlSetting, setCtrlSetting] = useState("fornoctrl");
-    const [shiftSetting, setShiftSetting] = useState("fornoshift");
-    const [altSetting, setAltSetting] = useState("fornoalt");
-    const [keySetting, setKeySetting] = useState("");
-    const [trayNumber, setTrayNumber] = useState(1)
-    const [slotNumber, setSlotNumber] = useState(1)
-    const [startSlotNumber, setStartSlotNumber] = useState(1)
-    const [endSlotNumber, setEndSlotNumber] = useState(1)
-    const [powerName, setPowerName] = useState("")
-    const [throttleAdjust, setThrottleAdjust] = useState(0)
     const [charOrKey, setCharOrKey] = useState("char")
     const [finalString, setFinalString] = useState([])
+    const [bindMode, setBindMode] = useState("console");
+
+    // Get saved commands from local storage or create empty array
+
+    const [confirmedCommands, setConfirmedCommands] = useState(() => {
+        const savedCommands = window.localStorage.getItem("confirmedCommands");
+        return savedCommands !== null ? JSON.parse(savedCommands) : [];
+    })
+    // Update local storage commands when state changes
+    useEffect(() => { localStorage.setItem("savedCommands", JSON.stringify(confirmedCommands)) }, [confirmedCommands])
 
     // Get saved keybinds from local storage or create empty array
-    
+
     const [savedKeybinds, setSavedKeybinds] = useState(() => {
         const savedBinds = window.localStorage.getItem("savedKeybinds");
         return savedBinds !== null ? JSON.parse(savedBinds) : [];
     })
+
+    // Update local storage keybinds when state changes
+    useEffect(() => { localStorage.setItem("savedKeybinds", JSON.stringify(savedKeybinds)) }, [savedKeybinds])
+
+    // List of special command names that need handled differently
+
+    const specialCommands = ["Execute a full tray", "Execute a partial tray", "Execute a power by name", "Execute a single tray command"]
 
     //                     //
     //  HANDLER FUNCTIONS  //
     //                     //
 
     function setDefaults() {
-        setCurrentSelectedCommand("Execute a power by name");
-        setConfirmedCommands([]);
+        const DEFAULT_KEY_SETTINGS = {
+            "ctrl": "fornoctrl",
+            "shift": "fornoshift",
+            "alt": "fornoalt",
+            "keypress": ""
+        }
+        setKeySettings(DEFAULT_KEY_SETTINGS)
+        const DEFAULT_CMD_SETTINGS = {
+            "commandname": "Fire all weapons",
+            "traynumber": 1,
+            "slotnumber": 1,
+            "startslotnumber": 1,
+            "endslotnumber": 1,
+            "powername": "",
+            "throttleadjust": ""
+        }
+        setCommandSettings(DEFAULT_CMD_SETTINGS);
+        setConfirmedCommands([])
         setBindName("");
-        setCtrlSetting("fornoctrl");
-        setShiftSetting("fornoshift");
-        setAltSetting("fornoalt");
-        setKeySetting("Space bar");
-        setTrayNumber(1);
-        setSlotNumber(1);
-        setStartSlotNumber(1);
-        setEndSlotNumber(1);
-        setPowerName("");
-        setThrottleAdjust(0);
         setCharOrKey("char")
     }
 
@@ -86,38 +114,19 @@ export default function Editor() {
     function handleAddCommand(e) {
         e.preventDefault();
 
-        if (currentSelectedCommand === "Execute a single tray command") {
-            setConfirmedCommands([...confirmedCommands, { "command": currentSelectedCommand, "traynumber": trayNumber, "slotnumber": slotNumber }])
-            return;
-        } else if (currentSelectedCommand === "Execute a power by name") {
-            setConfirmedCommands([...confirmedCommands, { "command": currentSelectedCommand, "powername": powerName }])
-            return;
-        } else if (currentSelectedCommand === "Execute a partial tray") {
-            setConfirmedCommands([...confirmedCommands, { "command": currentSelectedCommand, "traynumber": trayNumber, "startslotnumber": startSlotNumber, "endslotnumber": endSlotNumber }])
-            return;
-        } else if (currentSelectedCommand === "Execute a full tray") {
-            setConfirmedCommands([...confirmedCommands, { "command": currentSelectedCommand, "traynumber": trayNumber }])
-            return;
-        } else if (currentSelectedCommand === "Adjust throttle by percentage") {
-            setConfirmedCommands([...confirmedCommands, { "command": currentSelectedCommand, "throttleadjust": throttleAdjust }])
-            return;
-        }
-        else {
-            let alreadyexists = false
-            Object.keys(confirmedCommands).forEach(function (key) {
-                if (confirmedCommands[key]["command"] === currentSelectedCommand) {
-                    alert("You've already selected this command!");
-                    alreadyexists = true;
-                }
-            });
-            if (alreadyexists) {
-                return
-            } else {
-                console.log(currentSelectedCommand);
-                setConfirmedCommands([...confirmedCommands, { "command": currentSelectedCommand }])
+        let alreadyexists = false
+        Object.keys(confirmedCommands).forEach(function (key) {
+            if (confirmedCommands[key]["command"] === commandSettings.commandname && !specialCommands.includes(confirmedCommands[key]["commandname"])) {
+                alert("You've already selected this command!");
+                alreadyexists = true;
             }
+        });
+        if (alreadyexists) {
+            return
+        } else {
+            let newcommands = [...confirmedCommands, commandSettings]
+            setConfirmedCommands(newcommands)
         }
-
     }
 
     function handleRemoveCommand(e) {
@@ -127,7 +136,7 @@ export default function Editor() {
         if (e.target.value === "Execute a full tray") {
             let newCommandArray = confirmedCommands.filter(
                 savedcommand =>
-                    savedcommand.command !== e.target.value || (savedcommand.command === e.target.value &&
+                    savedcommand.commandname !== e.target.value || (savedcommand.commandname === e.target.value &&
                         savedcommand.traynumber !== e.target.getAttribute("data-traynumber"))
             );
             setConfirmedCommands(newCommandArray);
@@ -176,17 +185,17 @@ export default function Editor() {
         }
         // If none of the above apply, remove command based on the command name alone.
         else {
-            let newCommandArray = confirmedCommands.filter(savedcommand => savedcommand.command !== e.target.value)
+            let newCommandArray = confirmedCommands.filter(savedcommand => savedcommand.commandname !== e.target.value)
             setConfirmedCommands(newCommandArray)
         }
     }
 
     function handleCharOrKey(changeTo) {
         if (changeTo === "key") {
-            setKeySetting("Space bar")
+            setKeySettings({ ...keySettings, "keypress": "Space bar" })
             setCharOrKey("key")
         } else if (changeTo === "char") {
-            setKeySetting("")
+            setKeySettings({ ...keySettings, "keypress": "" })
             setCharOrKey("char")
         }
     }
@@ -210,116 +219,149 @@ export default function Editor() {
         });
     }
 
-    function buildABind() {
+    function changeBindMode(mode) {
+        setBindMode(mode);
+        buildBindStrings(bindMode);
+    }
 
-        let fullbindtoreturn = ""
+    function buildBindStrings(buildMode) {
 
-        for (const savedBindIndex in savedKeybinds) {
+        let fullKeybindString = "";
 
-            let thiscommandbind = "/bind "
+        savedKeybinds.forEach((keybind) => {
+            let commandIterator = 0;
+            let singleKeybindString = "";
 
-            switch (savedKeybinds[savedBindIndex].ctrlsetting) {
+            if (buildMode === "console") {
+                singleKeybindString += "/bind ";
+            }
+
+            switch (keybind["keysettings"]["ctrl"]) {
                 case "fornoctrl":
                     break;
                 case "leftctrl":
-                    thiscommandbind += "LCTRL+"
+                    singleKeybindString += "LCTRL+"
                     break;
                 case "rightctrl":
-                    thiscommandbind += "RCTRL+"
+                    singleKeybindString += "RCTRL+"
                     break;
                 case "anyctrl":
-                    thiscommandbind += "Control+"
+                    singleKeybindString += "Control+"
                     break;
                 default:
                     break;
             }
 
-            switch (savedKeybinds[savedBindIndex].shiftsetting) {
+            switch (keybind.keysettings.ctrl) {
                 case "fornoshift":
                     break;
                 case "leftshift":
-                    thiscommandbind += "LShift+"
+                    singleKeybindString += "LShift+"
                     break;
                 case "rightctrl":
-                    thiscommandbind += "RShift+"
+                    singleKeybindString += "RShift+"
                     break;
                 case "anyctrl":
-                    thiscommandbind += "Shift+"
+                    singleKeybindString += "Shift+"
                     break;
                 default:
                     break;
             }
 
-            switch (savedKeybinds[savedBindIndex].altsetting) {
+            switch (keybind.keysettings.alt) {
                 case "fornoalt":
                     break;
                 case "leftalt":
-                    thiscommandbind += "LAlt+"
+                    singleKeybindString += "LAlt+"
                     break;
                 case "rightalt":
-                    thiscommandbind += "RAlt+"
+                    singleKeybindString += "RAlt+"
                     break;
                 case "anyalt":
-                    thiscommandbind += "Alt+"
+                    singleKeybindString += "Alt+"
                     break;
                 default:
                     break;
             }
 
-            console.log(keys[savedKeybinds[savedBindIndex].keysetting]);
-
-            if (typeof keys[savedKeybinds[savedBindIndex].keysetting] !== "undefined") {
-                thiscommandbind += keys[savedKeybinds[savedBindIndex].keysetting];
+            if (typeof keypresses[keybind.keysettings.keypress] !== "undefined") {
+                singleKeybindString += keypresses[keybind.keysettings.keypress];
             } else {
-                thiscommandbind += savedKeybinds[savedBindIndex].keysetting
+                singleKeybindString += keybind.keysettings.keypress
             }
 
-            thiscommandbind += " \""
+            singleKeybindString += " "
 
-            for (let savedCommandIndex in confirmedCommands) {
-                if (confirmedCommands[savedCommandIndex].command === "Execute a single tray command") {
-                    let builtstring = "" + commandList[confirmedCommands[savedCommandIndex].command] + confirmedCommands[savedCommandIndex].traynumber + confirmedCommands[savedCommandIndex].slotnumber
-                    thiscommandbind += builtstring
-                    break;
-                } else if (confirmedCommands[savedCommandIndex].command === "Execute a power by name") {
-                    let builtstring = commandList[confirmedCommands[savedCommandIndex].command] + confirmedCommands[savedCommandIndex].powername
-                    thiscommandbind += builtstring;
-                    break;
-                } else if (confirmedCommands[savedCommandIndex].command === "Execute a partial tray") {
-                    let builtstring = ""
-                    for (let i = confirmedCommands[savedCommandIndex].startslotnumber - 1; i < confirmedCommands[savedCommandIndex].endslotnumber; i++) {
-                        builtstring += "+TrayExecByTray "
-                        builtstring += confirmedCommands[savedCommandIndex].traynumber + i;
-                    }
-                    thiscommandbind += builtstring
-                    break;
-                } else if (currentSelectedCommand === "Execute a full tray") {
-                    let builtstring = ""
-                    for (let i = 0; i <= confirmedCommands[savedCommandIndex].endslotnumber; i++) {
-                        builtstring += "+TrayExecByTray "
-                        builtstring += confirmedCommands[savedCommandIndex].traynumber + i;
-                    }
-                    thiscommandbind += builtstring
-                    break;
-                } else if (currentSelectedCommand === "Adjust throttle by percentage") {
-                    let builtstring = "throttleadjust " + confirmedCommands[savedCommandIndex].throttleadjust / 100
-                    thiscommandbind += builtstring
-                    break;
-                } else {
-                    console.log("Trying to find the following as a key in the command list:")
-                    console.log(confirmedCommands[savedCommandIndex].command)
-                    console.log("Which returned:")
-                    console.log(commands[confirmedCommands[savedCommandIndex].command])
+            if (buildMode === "file") {
+                singleKeybindString += "\""
+            }
 
-                    thiscommandbind += commands[confirmedCommands[savedCommandIndex].command]
+            console.log("Should be about to iterate:")
+            console.log(confirmedCommands)
+
+            keybind.commands.forEach((command) => {
+                let thisCommandName = command["commandname"];
+                console.log("Trying to switch cmd name " + thisCommandName);
+
+                switch (thisCommandName) {
+                    case "Execute a single tray command":
+                        if (commandIterator > 0) {
+                            singleKeybindString += " $$ "
+                        }
+                        singleKeybindString += (command["commandname"] + " " + command.traynumber + " " + command.slotnumber + " ");
+                        commandIterator++;
+                        break;
+                    case "Execute a power by name":
+                        if (commandIterator > 0) {
+                            singleKeybindString += " $$ "
+                        }
+                        singleKeybindString += (commands[command["commandname"]] + " " + command.powername + " ");
+                        commandIterator++;
+                        break;
+                    case "Execute a partial tray":
+                        for (let i = command.startslotnumber - 1; i < command.endslotnumber; i++) {
+                            if (commandIterator > 0) {
+                                singleKeybindString += " $$ "
+                            }
+                            singleKeybindString += ("+TrayExecByTray " + command.traynumber + i + " ");
+                            commandIterator++;
+                        }
+                        break;
+                    case "Execute a full tray":
+                        for (let i = 0; i <= command.endslotnumber; i++) {
+                            if (commandIterator > 0) {
+                                singleKeybindString += " $$ "
+                            }
+                            singleKeybindString += ("+TrayExecByTray " + command.traynumber + i + " ");
+                            commandIterator++;
+                        }
+                        break;
+                    case "Adjust throttle by percentage":
+                        if (commandIterator > 0) {
+                            singleKeybindString += " $$ "
+                        }
+                        singleKeybindString += ("throttleadjust " + command.throttleadjust / 100 + " ");
+                        commandIterator++;
+                        break;
+                    default:
+                        if (commandIterator > 0) {
+                            singleKeybindString += " $$ "
+                        }
+                        singleKeybindString += commands[command["commandname"]];
+                        commandIterator++;
                 }
+            })
+
+
+            if (buildMode === "file") {
+                singleKeybindString += "\"";
             }
 
-            thiscommandbind += "\"\n"
-            fullbindtoreturn += thiscommandbind
-        }
+            singleKeybindString += "\n";
+            fullKeybindString += singleKeybindString;
+        })
 
-        setFinalString(fullbindtoreturn)
+        setFinalString(fullKeybindString)
     }
 
     function handleSaveKeybind(e) {
@@ -331,27 +373,24 @@ export default function Editor() {
         } else if (confirmedCommands.length === 0) { // Check there are actually commands for the keybind
             alert("There are no commands to save!")
             return;
-        } else if (keySetting === "") { // Check there was a key given to bind to
+        } else if (keySettings.keypress === "") { // Check there was a key given to bind to
             alert("No key was selected!")
             return;
         } else {
             let keybindToSave = {
                 "bindname": bindName,
-                "runcommands": confirmedCommands,
-                "ctrlsetting": ctrlSetting,
-                "shiftsetting": shiftSetting,
-                "altsetting": altSetting,
-                "keysetting": keySetting
+                "commands": confirmedCommands,
+                "keysettings": keySettings
             }
-            let newKeyBinds = [...savedKeybinds, keybindToSave]
+            console.log(keybindToSave["commands"])
+            let newKeyBinds = [...savedKeybinds, keybindToSave] //Create a new array because React wont rerender based on a direct update
             setSavedKeybinds(newKeyBinds);
             toast("Bind was saved as " + bindName);
-            buildABind(); // Update the bind string
             setDefaults(); // Reset the form to default values for next keybind
         }
     }
 
-    useEffect(() => {localStorage.setItem("savedKeybinds", JSON.stringify(savedKeybinds))}, [savedKeybinds])
+
 
     // Each delete keybind button has the bind name as the value
     // Filter existing keybinds to remove those matching the keybind name 
@@ -359,10 +398,11 @@ export default function Editor() {
         e.preventDefault()
         let bindsSurvivingDelete = savedKeybinds.filter(x => x.bindname !== e.target.value)
         setSavedKeybinds(bindsSurvivingDelete);
-        localStorage.removeItem("savedKeybinds");
-        localStorage.setItem("savedKeybinds", JSON.stringify(savedKeybinds));
-        buildABind();
     }
+
+    // Bad use effect
+    // eslint-disable-next-line
+    useEffect(() => buildBindStrings(bindMode), [savedKeybinds]);
 
     // Return the page
     return (
@@ -377,30 +417,30 @@ export default function Editor() {
                         <div id="ctrlblock">
                             <label htmlFor='ctrlsetting'>CTRL Key:</label>
                             <fieldset name="ctrlsetting">
-                                <input type="radio" value="noctrl" name="ctrlsettinggroup" onChange={(e) => setCtrlSetting(e.target.value)} defaultChecked={true} /> No control key<br />
-                                <input type="radio" value="anyctrl" name="ctrlsettinggroup" onChange={(e) => setCtrlSetting(e.target.value)} /> Either control key<br />
-                                <input type="radio" value="leftctrl" name="ctrlsettinggroup" onChange={(e) => setCtrlSetting(e.target.value)} /> Left control key<br />
-                                <input type="radio" value="rightctrl" name="ctrlsettinggroup" onChange={(e) => setCtrlSetting(e.target.value)} /> Right control key
+                                <input type="radio" value="noctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} defaultChecked={true} /> No control key<br />
+                                <input type="radio" value="anyctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} /> Either control key<br />
+                                <input type="radio" value="leftctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} /> Left control key<br />
+                                <input type="radio" value="rightctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} /> Right control key
                             </fieldset>
                         </div>
 
                         <div id="shiftblock">
                             <label htmlFor='shiftsetting'>Shift Key:</label>
                             <fieldset name="shiftsetting">
-                                <input type="radio" value="noshift" name="shiftsettinggroup" onChange={(e) => setShiftSetting(e.target.value)} defaultChecked={true} /> No shift key<br />
-                                <input type="radio" value="anyshift" name="shiftsettinggroup" onChange={(e) => setShiftSetting(e.target.value)} />  Either shift key<br />
-                                <input type="radio" value="leftshift" name="shiftsettinggroup" onChange={(e) => setShiftSetting(e.target.value)} /> Left shift key<br />
-                                <input type="radio" value="rightshift" name="shiftsettinggroup" onChange={(e) => setShiftSetting(e.target.value)} /> Right shift key
+                                <input type="radio" value="noshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} defaultChecked={true} /> No shift key<br />
+                                <input type="radio" value="anyshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} />  Either shift key<br />
+                                <input type="radio" value="leftshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} /> Left shift key<br />
+                                <input type="radio" value="rightshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} /> Right shift key
                             </fieldset>
                         </div>
 
                         <div id="altblock">
                             <label htmlFor='altsetting'>Alt Key:</label>
                             <fieldset name="altsetting">
-                                <input type="radio" value="noalt" name="altsettinggroup" onChange={(e) => setAltSetting(e.target.value)} defaultChecked={true} /> No alt key<br />
-                                <input type="radio" value="anyalt" name="altsettinggroup" onChange={(e) => setAltSetting(e.target.value)} /> Either alt key<br />
-                                <input type="radio" value="leftalt" name="altsettinggroup" onChange={(e) => setAltSetting(e.target.value)} /> Left alt key<br />
-                                <input type="radio" value="rightalt" name="altsettinggroup" onChange={(e) => setAltSetting(e.target.value)} /> Right alt key
+                                <input type="radio" value="noalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} defaultChecked={true} /> No alt key<br />
+                                <input type="radio" value="anyalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} /> Either alt key<br />
+                                <input type="radio" value="leftalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} /> Left alt key<br />
+                                <input type="radio" value="rightalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} /> Right alt key
                             </fieldset>
                         </div>
 
@@ -413,70 +453,70 @@ export default function Editor() {
 
                             {charOrKey === "char" && <>
                                 <label htmlFor='keyselector'>Enter a number or letter (lowercase or uppercase): </label>
-                                <input type="text" name="keyselector" maxLength="1" onChange={(e) => setKeySetting(e.target.value)} />
+                                <input value={keySettings.keypress} type="text" name="keyselector" maxLength="1" onChange={(e) => setKeySettings({ ...keySettings, "keypress": e.target.value })} />
                             </>}
 
 
                             {charOrKey === "key" && <>
                                 <label htmlFor='keyselector'>Choose a key or button:</label>
-                                <select name="keyselector" onChange={(e) => setKeySetting(e.target.value)} >
+                                <select name="keyselector" onChange={(e) => setKeySettings({ ...keySettings, "keypress": e.target.value })} >
                                     {keyList.map(x => <option value={x} key={x}>{x}</option>)}
                                 </select>
                             </>}
                         </div>
 
                         <div id="keyconfirmation">
-                            Your key combination will be<strong>
-                                {ctrlSetting === "anyctrl" && <>Ctrl + </>} {ctrlSetting === "leftctrl" && <>Left Ctrl + </>} {ctrlSetting === "rightctrl" && <>Right Ctrl + </>} {shiftSetting === "anyshift" && <>Shift + </>} {shiftSetting === "leftshift" && <>Left Shift + </>} {shiftSetting === "rightshift" && <>Right Shift + </>} {altSetting === "anyalt" && <>Alt + </>} {altSetting === "leftalt" && <>Left Alt + </>} {altSetting === "rightalt" && <>Right Alt + </>} {keySetting}</strong>
+                            Your key combination will be <strong>
+                                {keySettings.ctrl === "anyctrl" && <>Ctrl + </>} {keySettings.ctrl === "leftctrl" && <>Left Ctrl + </>} {keySettings.ctrl === "rightctrl" && <>Right Ctrl + </>} {keySettings.shift === "anyshift" && <>Shift + </>} {keySettings.shift === "leftshift" && <>Left Shift + </>} {keySettings.shift === "rightshift" && <>Right Shift + </>} {keySettings.alt === "anyalt" && <>Alt + </>} {keySettings.alt === "leftalt" && <>Left Alt + </>} {keySettings.alt === "rightalt" && <>Right Alt + </>} {keySettings.keypress}</strong>
                         </div>
                     </section>
 
                     <section id="commandsetter" className="formpart">
                         <h2 className="sectiontitle">Step Two: Set the commands to run</h2>
                         <label htmlFor="commandselector">Choose a command:</label>
-                        <select name="commandselector" value={currentSelectedCommand} onChange={(e) => setCurrentSelectedCommand(e.target.value)}>
+                        <select name="commandselector" value={commandSettings.commandname} onChange={(e) => setCommandSettings({ ...commandSettings, "commandname": e.target.value })}>
                             {commandList.map(x => <option value={x} key={x}>{x}</option>)}
                         </select>
 
-                        {currentSelectedCommand === "Execute a single tray command" &&
+                        {commandSettings.commandname === "Execute a single tray command" &&
                             <>
                                 <div className="advanced-options">
-                                    Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setTrayNumber(e.target.value)}></input>
-                                    Slot number: <input type="number" name="slotnumber" min="1" max="10" onChange={(e) => setSlotNumber(e.target.value)}></input>
+                                    Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "traynumber": e.target.value })}></input>
+                                    Slot number: <input type="number" name="slotnumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "slotnumber": e.target.value })}></input>
                                 </div>
                             </>
                         }
 
-                        {currentSelectedCommand === "Execute a full tray" &&
+                        {commandSettings.commandname === "Execute a full tray" &&
                             <>
                                 <div className="advanced-options">
-                                    Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setTrayNumber(e.target.value)}></input>
+                                    Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "traynumber": e.target.value })}></input>
                                 </div>
                             </>
                         }
 
-                        {currentSelectedCommand === "Execute a partial tray" &&
+                        {commandSettings.commandname === "Execute a partial tray" &&
                             <>
                                 <div className="advanced-options">
-                                    Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setTrayNumber(e.target.value)}></input>
-                                    Starting slot number: <input type="number" name="startslotnumber" min="1" max="10" onChange={(e) => setStartSlotNumber(e.target.value)}></input>
-                                    Ending slot number: <input type="number" name="startslotnumber" min="1" max="10" onChange={(e) => setEndSlotNumber(e.target.value)}></input>
+                                    Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "traynumber": e.target.value })}></input>
+                                    Starting slot number: <input type="number" name="startslotnumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "startslotnumber": (e.target.value) })}></input>
+                                    Ending slot number: <input type="number" name="endslotnumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "endslotnumber": e.target.value })}></input>
                                 </div>
                             </>
                         }
 
-                        {currentSelectedCommand === "Execute a power by name" &&
+                        {commandSettings.commandname === "Execute a power by name" &&
                             <>
                                 <div className="advanced-options">
-                                    Power name: <input type="text" name="powername" min="1" max="10" onChange={(e) => setPowerName(e.target.value)}></input>
+                                    Power name: <input type="text" name="powername" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "powername": e.target.value })}></input>
                                 </div>
                                 <div className="inline-warning">Make sure you enter the power name exactly as it appears in game (including punctuation and symbols) or this will not work.</div>
                             </>
                         }
 
-                        {currentSelectedCommand === "Adjust throttle by percentage" &&
+                        {commandSettings.commandname === "Adjust throttle by percentage" &&
                             <>
-                                Throttle change percentage: <input type="number" name="throttlechange" min="-100" max="100" onChange={(e) => setThrottleAdjust(e.target.value)}></input>
+                                Throttle change percentage: <input type="number" name="throttlechange" min="-100" max="100" onChange={(e) => setCommandSettings({ ...commandSettings, "throttleadjust": (e.target.value) })}></input>
                                 <div className="inline-warning">Use -100 for reverse throttle by 100%, and 100 for increase throttle by 100%.</div>
                             </>
                         }
@@ -488,14 +528,14 @@ export default function Editor() {
                             {confirmedCommands.map((item) =>
                                 <>
                                     <span className="commanddetails">
-                                        {item.command}
-                                        {item.command === "Execute a partial tray" && <> - Tray {item.traynumber}, slots {item.startslotnumber} to {item.endslotnumber} </>}
-                                        {item.command === "Execute a full tray" && <> - Tray {item.traynumber}</>}
-                                        {item.command === "Execute a single tray command" && <> - Tray {item.traynumber}, slot {item.slotnumber}</>}
-                                        {item.command === "Execute a power by name" && <> - Power name: {item.powername}</>}
-                                        {item.command === "Adjust throttle by percentage" && <> - Throttle Percentage change {item.throttleadjust}%</>}
+                                        {item.commandname}
+                                        {item.commandname === "Execute a partial tray" && <> - Tray {item.traynumber}, slots {item.startslotnumber} to {item.endslotnumber} </>}
+                                        {item.commandname === "Execute a full tray" && <> - Tray {item.traynumber}</>}
+                                        {item.commandname === "Execute a single tray command" && <> - Tray {item.traynumber}, slot {item.slotnumber}</>}
+                                        {item.commandname === "Execute a power by name" && <> - Power name: {item.powername}</>}
+                                        {item.commandname === "Adjust throttle by percentage" && <> - Throttle Percentage change {item.throttleadjust}%</>}
                                     </span>
-                                    <button className="removeitembutton" key={item.command} data-traynumber={item.traynumber} data-startslotnumber={item.startslotnumber} data-endslotnumber={item.endslotnumber} data-powername={item.powername} data-slotnumber={item.slotnumber} value={item.command} onClick={handleRemoveCommand}>Remove</button><br />
+                                    <button className="removeitembutton" key={item.commandname} data-traynumber={item.traynumber} data-startslotnumber={item.startslotnumber} data-endslotnumber={item.endslotnumber} data-powername={item.powername} data-slotnumber={item.slotnumber} value={item.commandname} onClick={handleRemoveCommand}>Remove</button><br />
                                 </>)
                             }
                         </div>
@@ -503,21 +543,44 @@ export default function Editor() {
                     </section>
 
                     <section id="keybindsummary" className="formpart">
+
                         <h2 className="sectiontitle">Name and save your keybind</h2>
+
                         Keybind name: <input type="text" onChange={(e) => setBindName(e.target.value)} value={bindName}></input><br /><br />
                         <button onClick={handleSaveKeybind}>Save this keybind</button>
 
-                        {savedKeybinds.map((item) =>
-                            <>
-                                <br />
-                                <span className="savedkeybinddetails">{item.bindname}</span>
-                                <button className="removeitembutton" value={item.bindname} key={item.bindname} onClick={handleDeleteSavedKeybind}>Remove</button><br />
-                            </>)
-                        }
+                        <h3>Your saved keybinds</h3>
 
-                        <div id="finalstring">
-                            {finalString}
+                        <table id="savedcommandtable">
+                            <tr>
+                                <th>Keybind Name</th>
+                                <th>Keypress</th>
+                                <th></th>
+                            </tr>
+
+                            {savedKeybinds.map((item) =>
+                                <>
+                                    <tr>
+                                        <td>{item.bindname}</td>
+                                        <td>{item.keysettings.ctrl === "anyctrl" && <>Ctrl + </>} {item.keysettings.ctrl === "leftctrl" && <>Left Ctrl + </>} {item.keysettings.ctrl === "rightctrl" && <>Right Ctrl + </>} {item.keysettings.shift === "anyshift" && <>Shift + </>} {item.keysettings.shift === "leftshift" && <>Left Shift + </>} {item.keysettings.shift === "rightshift" && <>Right Shift + </>} {item.keysettings.alt === "anyalt" && <>Alt + </>} {item.keysettings.alt === "leftalt" && <>Left Alt + </>} {item.keysettings.alt === "rightalt" && <>Right Alt + </>} {item.keysettings.keypress}</td>
+                                        <td><button className="removeitembutton" value={item.bindname} key={item.bindname} onClick={handleDeleteSavedKeybind}>Remove</button><br /></td>
+                                    </tr>
+                                </>)
+                            }
+                        </table>
+                    </section>
+
+                    <section id="exportsection" className="formpart">
+
+                        <h2>Export your keybinds</h2>
+                        <div name="bindmodesetter" id="bindmodesetter">
+                            <input type="radio" value="console" name="bindmodesetter" onChange={() => changeBindMode("console")} defaultChecked={true} /> Console command mode<br />
+                            <input type="radio" value="file" name="bindmodesetter" onChange={() => changeBindMode("file")} /> Bind file mode
                         </div>
+
+                        <pre id="finalstring">
+                            {(finalString.length === 0 && <>Nothing to export!</>) || finalString}
+                        </pre>
 
                         <button onClick={handleCopyString}>Copy Bind String</button>
                     </section>
