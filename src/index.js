@@ -6,7 +6,8 @@ import Editor from './Editor';
 import Navbar from './Navbar';
 import Help from './Help';
 import './styles/lcars-colors.css';
-import './styles/app-styles.css';
+import './styles/app.css';
+import './styles/styles.css';
 import Tips from './Tips';
 
 const Routing = () => {

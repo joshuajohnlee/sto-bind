@@ -39,9 +39,9 @@ export default function Editor() {
     //                //
 
     const [keySettings, setKeySettings] = useState({
-        "ctrl": "fornoctrl",
-        "shift": "fornoshift",
-        "alt": "fornoalt",
+        "ctrl": "noctrl",
+        "shift": "noshift",
+        "alt": "noalt",
         "keypress": ""
     });
 
@@ -89,9 +89,9 @@ export default function Editor() {
 
     function setDefaults() {
         const DEFAULT_KEY_SETTINGS = {
-            "ctrl": "fornoctrl",
-            "shift": "fornoshift",
-            "alt": "fornoalt",
+            "ctrl": "noctrl",
+            "shift": "noshift",
+            "alt": "noalt",
             "keypress": ""
         }
         setKeySettings(DEFAULT_KEY_SETTINGS)
@@ -207,7 +207,7 @@ export default function Editor() {
         console.log("Trying to print the final string:")
         console.log(finalString)
         navigator.clipboard.writeText(finalString)
-        toast.success('Copied! (Except it doesn\'t do anything yet so you just copied a test.)', {
+        toast.success('Copied!', {
             position: "bottom-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -224,6 +224,40 @@ export default function Editor() {
         buildBindStrings(bindMode);
     }
 
+    function handleSaveKeybind(e) {
+        e.preventDefault();
+
+        if (bindName === "") { // Check keybind name not empty
+            alert("You haven't given your keybind a name!");
+            return;
+        } else if (confirmedCommands.length === 0) { // Check there are actually commands for the keybind
+            alert("There are no commands to save!")
+            return;
+        } else if (keySettings.keypress === "") { // Check there was a key given to bind to
+            alert("No key was selected!")
+            return;
+        } else {
+            let keybindToSave = {
+                "bindname": bindName,
+                "commands": confirmedCommands,
+                "keysettings": keySettings
+            }
+            console.log(keybindToSave["commands"])
+            let newKeyBinds = [...savedKeybinds, keybindToSave] //Create a new array because React wont rerender based on a direct update
+            setSavedKeybinds(newKeyBinds);
+            toast("Bind was saved as " + bindName);
+            setDefaults(); // Reset the form to default values for next keybind
+        }
+    }
+
+    // Each delete keybind button has the bind name as the value
+    // Filter existing keybinds to remove those matching the keybind name 
+    function handleDeleteSavedKeybind(e) {
+        e.preventDefault()
+        let bindsSurvivingDelete = savedKeybinds.filter(x => x.bindname !== e.target.value)
+        setSavedKeybinds(bindsSurvivingDelete);
+    }
+
     function buildBindStrings(buildMode) {
 
         let fullKeybindString = "";
@@ -237,7 +271,7 @@ export default function Editor() {
             }
 
             switch (keybind["keysettings"]["ctrl"]) {
-                case "fornoctrl":
+                case "noctrl":
                     break;
                 case "leftctrl":
                     singleKeybindString += "LCTRL+"
@@ -253,7 +287,7 @@ export default function Editor() {
             }
 
             switch (keybind.keysettings.ctrl) {
-                case "fornoshift":
+                case "noshift":
                     break;
                 case "leftshift":
                     singleKeybindString += "LShift+"
@@ -269,7 +303,7 @@ export default function Editor() {
             }
 
             switch (keybind.keysettings.alt) {
-                case "fornoalt":
+                case "noalt":
                     break;
                 case "leftalt":
                     singleKeybindString += "LAlt+"
@@ -323,16 +357,16 @@ export default function Editor() {
                             if (commandIterator > 0) {
                                 singleKeybindString += " $$ "
                             }
-                            singleKeybindString += ("+TrayExecByTray " + command.traynumber + i + " ");
+                            singleKeybindString += ("+TrayExecByTray " + command.traynumber + " " + i + " ");
                             commandIterator++;
                         }
                         break;
                     case "Execute a full tray":
-                        for (let i = 0; i <= command.endslotnumber; i++) {
+                        for (let i = 0; i <= 10; i++) {
                             if (commandIterator > 0) {
                                 singleKeybindString += " $$ "
                             }
-                            singleKeybindString += ("+TrayExecByTray " + command.traynumber + i + " ");
+                            singleKeybindString += ("+TrayExecByTray " + command.traynumber + " " + i + " ");
                             commandIterator++;
                         }
                         break;
@@ -364,45 +398,20 @@ export default function Editor() {
         setFinalString(fullKeybindString)
     }
 
-    function handleSaveKeybind(e) {
-        e.preventDefault();
-
-        if (bindName === "") { // Check keybind name not empty
-            alert("You haven't given your keybind a name!");
-            return;
-        } else if (confirmedCommands.length === 0) { // Check there are actually commands for the keybind
-            alert("There are no commands to save!")
-            return;
-        } else if (keySettings.keypress === "") { // Check there was a key given to bind to
-            alert("No key was selected!")
-            return;
-        } else {
-            let keybindToSave = {
-                "bindname": bindName,
-                "commands": confirmedCommands,
-                "keysettings": keySettings
-            }
-            console.log(keybindToSave["commands"])
-            let newKeyBinds = [...savedKeybinds, keybindToSave] //Create a new array because React wont rerender based on a direct update
-            setSavedKeybinds(newKeyBinds);
-            toast("Bind was saved as " + bindName);
-            setDefaults(); // Reset the form to default values for next keybind
-        }
-    }
-
-
-
-    // Each delete keybind button has the bind name as the value
-    // Filter existing keybinds to remove those matching the keybind name 
-    function handleDeleteSavedKeybind(e) {
-        e.preventDefault()
-        let bindsSurvivingDelete = savedKeybinds.filter(x => x.bindname !== e.target.value)
-        setSavedKeybinds(bindsSurvivingDelete);
-    }
-
     // Bad use effect
     // eslint-disable-next-line
     useEffect(() => buildBindStrings(bindMode), [savedKeybinds]);
+
+    function  downloadTxtFile(e) {
+        e.preventDefault();
+        const element = document.createElement("a");
+        let exportstring = finalString
+        const file = new Blob([exportstring], {type: 'text/plain'});
+        element.href = URL.createObjectURL(file);
+        element.download = "keybindexport.txt";
+        document.body.appendChild(element); // Required for this to work in FireFox
+        element.click();
+      }
 
     // Return the page
     return (
@@ -417,39 +426,38 @@ export default function Editor() {
                         <div id="ctrlblock">
                             <label htmlFor='ctrlsetting'>CTRL Key:</label>
                             <fieldset name="ctrlsetting">
-                                <input type="radio" value="noctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} defaultChecked={true} /> No control key<br />
-                                <input type="radio" value="anyctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} /> Either control key<br />
-                                <input type="radio" value="leftctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} /> Left control key<br />
-                                <input type="radio" value="rightctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} /> Right control key
+                                <input type="radio" value="noctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} checked={keySettings.ctrl === "noctrl"} /> No control key<br />
+                                <input type="radio" value="anyctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} checked={keySettings.ctrl === "anyctrl"} /> Either control key<br />
+                                <input type="radio" value="leftctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} checked={keySettings.ctrl === "leftctrl"} /> Left control key<br />
+                                <input type="radio" value="rightctrl" name="ctrlsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "ctrl": e.target.value })} checked={keySettings.ctrl === "rightctrl"} /> Right control key
                             </fieldset>
                         </div>
 
                         <div id="shiftblock">
                             <label htmlFor='shiftsetting'>Shift Key:</label>
                             <fieldset name="shiftsetting">
-                                <input type="radio" value="noshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} defaultChecked={true} /> No shift key<br />
-                                <input type="radio" value="anyshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} />  Either shift key<br />
-                                <input type="radio" value="leftshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} /> Left shift key<br />
-                                <input type="radio" value="rightshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} /> Right shift key
+                                <input type="radio" value="noshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} checked={keySettings.shift === "noshift"} /> No shift key<br />
+                                <input type="radio" value="anyshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} checked={keySettings.shift === "anyshift"} />  Either shift key<br />
+                                <input type="radio" value="leftshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} checked={keySettings.shift === "leftshift"} /> Left shift key<br />
+                                <input type="radio" value="rightshift" name="shiftsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "shift": e.target.value })} checked={keySettings.shift === "rightshift"} /> Right shift key
                             </fieldset>
                         </div>
 
                         <div id="altblock">
                             <label htmlFor='altsetting'>Alt Key:</label>
                             <fieldset name="altsetting">
-                                <input type="radio" value="noalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} defaultChecked={true} /> No alt key<br />
-                                <input type="radio" value="anyalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} /> Either alt key<br />
-                                <input type="radio" value="leftalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} /> Left alt key<br />
-                                <input type="radio" value="rightalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} /> Right alt key
+                                <input type="radio" value="noalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} checked={keySettings.alt === "noalt"} /> No alt key<br />
+                                <input type="radio" value="anyalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} checked={keySettings.alt === "anyalt"} /> Either alt key<br />
+                                <input type="radio" value="leftalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} checked={keySettings.alt === "left"} /> Left alt key<br />
+                                <input type="radio" value="rightalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} checked={keySettings.alt === "right"} /> Right alt key
                             </fieldset>
                         </div>
 
                         <div id="keyblock">
 
-                            <fieldset name="charorkey">
-                                <input type="radio" value="char" name="charorkey" onChange={() => handleCharOrKey("char")} defaultChecked={true} />Use a character or numbers
-                                <input type="radio" value="key" name="charorkey" onChange={() => handleCharOrKey("key")} />Use a special key
-                            </fieldset>
+                            <div id="charorkey-char"><input type="radio" value="char" name="charorkey" onChange={() => handleCharOrKey("char")} defaultChecked={true} />Use a character or numbers</div>
+                            <div id="charorkey-key"><input type="radio" value="key" name="charorkey" onChange={() => handleCharOrKey("key")} />Use a special key</div>
+
 
                             {charOrKey === "char" && <>
                                 <label htmlFor='keyselector'>Enter a number or letter (lowercase or uppercase): </label>
@@ -573,16 +581,19 @@ export default function Editor() {
                     <section id="exportsection" className="formpart">
 
                         <h2>Export your keybinds</h2>
+
+                        {bindMode === "console" && <><div className="advice-box">To use bind commands in the console (the game's chat box), copy and individual command that starts with "/bind", paste it into your chat and press enter. The bind will automatically save and become part of that character's keybinds.</div></>}
                         <div name="bindmodesetter" id="bindmodesetter">
-                            <input type="radio" value="console" name="bindmodesetter" onChange={() => changeBindMode("console")} defaultChecked={true} /> Console command mode<br />
-                            <input type="radio" value="file" name="bindmodesetter" onChange={() => changeBindMode("file")} /> Bind file mode
+                            <input type="radio" value="console" name="bindmodesetter" onChange={() => changeBindMode("console")} checked={bindMode === "console"} /> Chat box command mode<br />
+                            <input type="radio" value="file" name="bindmodesetter" onChange={() => changeBindMode("file")} checked={bindMode === "file"}/> Bind file mode
                         </div>
 
-                        <pre id="finalstring">
+                        <div id="finalstring">
                             {(finalString.length === 0 && <>Nothing to export!</>) || finalString}
-                        </pre>
+                        </div>
 
                         <button onClick={handleCopyString}>Copy Bind String</button>
+                        {bindMode === "file" && finalString.length !== 0 && <><button onClick={downloadTxtFile}>Download txt</button></>}
                     </section>
                 </form>
             </div>

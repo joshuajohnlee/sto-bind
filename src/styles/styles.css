@@ -1,0 +1,118 @@
+@charset "utf-8";
+@import "./lcars-colors.css";
+@import url('https://fonts.googleapis.com/css?family=Nunito+Sans:light,regular,bold,italic&subset=latin,latin-ext');
+
+:root {
+	font-size: 1.5rem;
+	--section-2-color: #fba;
+	color-scheme: dark;
+	--sub-fonts: .8rem;
+}
+
+body {
+	padding-block: 5px;
+	background-color: #000;
+	font-family: 'Antonio', 'Arial Narrow', 'Avenir Next Condensed', sans-serif;
+	font-weight: 400;
+	line-height: 1.5;
+	color: #c7f;
+}
+
+form {
+	color: var(--space-white);
+	font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+	font-size: 0.5em;
+}
+
+button, select {
+	margin-left: 1vw;
+}
+
+button {
+	border: none;
+	border-radius: 25px;
+	font-family: Antonio, Arial, Helvetica, sans-serif;
+	padding: 0 1vw 0 1vw;
+	border-left: 15px solid var(--butterscotch);
+	border-right: 15px solid var(--butterscotch);
+	text-transform: uppercase;
+	background: none;
+	color: var(--violet);
+}
+
+button:active {
+	background-color: rgba(255, 153, 102, 0.5);
+}
+
+a {
+	color: #c3f;
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: .2rem;
+}
+
+a:hover {
+	filter: brightness(115%);
+	animation: none;
+}
+
+a:active {
+	filter: brightness(80%);
+	outline: none;
+}
+
+h1, h2, h3, h4 {
+	margin-top: 1.15rem;
+	margin-bottom: 1rem;
+	font-weight: normal;
+	line-height: 1;
+	text-transform: uppercase;
+    font-family: 'Antonio', Arial, Helvetica, sans-serif;
+}
+
+h1 {
+	font-size: 2rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	color: var(--butterscotch);
+}
+
+h3 {
+	font-size: 1rem;
+	color: var(--african-violet);
+}
+
+h4 {
+	font-size: 0.5rem;
+	color: var(--ice);
+}
+
+p {
+	font-family: 'Nunito Sans', Arial, Helvetica, sans-serif;
+	font-size: medium;
+	margin-block: 1rem;
+	color: #FFF;
+}
+
+nav {
+	display: flex;
+	width: 100%;
+	list-style-type: none;
+}
+
+nav a {
+	padding: 0.75vh 1vw 0.3vh 0;
+	text-transform: uppercase;
+	text-align: right;
+	color: black;
+	width: 100%;
+	font-size: medium;
+	margin: 0 0.5vw 0 0.5vw;
+	text-decoration: none;
+}
+
+nav a:active {
+	background-color: orange !important;
+}
