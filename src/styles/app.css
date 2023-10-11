@@ -51,8 +51,7 @@ EDITOR PAGE
 	padding-bottom: 50px;
 	margin: 2vh 5vw 2vh 5vw;
 	color: var(--space-white);
-	font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-	font-size: 0.5em;
+	font-size: 0.60rem;
 }
 
 .formpart {
@@ -69,29 +68,22 @@ EDITOR PAGE
 }
 
 .warning-box {
-	border-left: 15px solid var(--mars);
-	border-right: 15px solid var(--mars);
-	border-radius: 25px;
+	border: 1px solid var(--gold);
+	border-left-width: 4vw;
+	border-radius: 10px;
 	font-family: 'Nunito Sans', Arial, Helvetica, sans-serif;
 	padding: 1vh 1vw 1vh 1vw;
-	background-color: rgb(29, 8, 8);
+	background-color: rgb(24, 21, 4);
 	margin: 1vh auto 1vh;
 }
 
-.advice-box {
+.inset-box {
 	border: solid var(--green) 1px;
 	background-color: rgb(18, 22, 21);
 	border-left-width: 4vw;
 	margin: 2vh 0 2vh 0;
 	padding: 1vh 1vw 1vh 1vw;
 	border-radius: 10px;
-}
-
-.inset-box {
-	border: 1px solid var(--gray);
-	border-radius: 10px;
-	border-left: solid var(--gray) 20px ;
-	/* padding: 1vw; */
 }
 
 /* 
@@ -108,15 +100,14 @@ STEP ONE: KEYS
 	border-radius: 10px;
 	padding: 1vh 1vw;
 	display: grid;
-	grid-template-columns: 1fr 1fr;
-	grid-template-rows: 1fr 1fr;
-	row-gap: 2vh;
+	grid-template-columns: 1fr 1fr 2fr;
+	grid-template-rows: 1fr;
+	column-gap: 2vh;
 	margin-bottom: 2vh;
 }
 
 #charkeyradio {
-	grid-row-start: 1;
-	grid-row-end: -1;
+	grid-row: 1;
 	grid-column: 1;
 }
 
@@ -126,8 +117,8 @@ STEP ONE: KEYS
 }
 
 .charkeyinput {
-	grid-row: 2;
-	grid-column: 2;
+	grid-row: 1;
+	grid-column: 3;
 }
 
 .combination-keys {
@@ -162,7 +153,6 @@ STEP TWO: COMMANDS
 #currentcommandslist {
 	display: grid;
 	row-gap: 1vh;
-	width: 80%;
 	grid-template-columns: 2fr 1fr;
 }
 
@@ -175,13 +165,34 @@ STEP TWO: COMMANDS
 	grid-column: 2;
 }
 
+.advanced-options {
+	margin: 1vh 0 1vh 0;
+}
+
+.advanced-options label {
+	margin-left: 1vw;
+}
+
+.advanced-options input {
+	margin-left: 1vw;
+	width: 1vw;
+}
+
+#powername {
+	width: 10vw;
+}
+
 /*
 STEP THREE: NAME AND SAVE
 */
 
+#keybindnameinput {
+	margin-left: 0.25rem;
+}
+
 #keybindsummary {
-	border: 1px solid var(--butterscotch);
-	border-left: 10vw solid var(--butterscotch);
+	border: 1px solid var(--peach);
+	border-left: 10vw solid var(--peach);
 }
 
 
@@ -200,6 +211,7 @@ STEP FOUR: EXPORT
 }
 
 #finalstring {
+	white-space: pre-wrap;
 	background-color: #333;
 	border: dotted white 1px;
 	margin: 1vh 0 1vh 0;

@@ -12,7 +12,7 @@
 body {
 	padding-block: 5px;
 	background-color: #000;
-	font-family: 'Antonio', 'Arial Narrow', 'Avenir Next Condensed', sans-serif;
+	font-family: 'Nunito Sans', Arial, Helvetica, sans-serif;
 	font-weight: 400;
 	line-height: 1.5;
 	color: #c7f;
@@ -24,14 +24,14 @@ button, select {
 
 button {
 	border: none;
+	padding: 0.75rem 0.5rem 0.25rem 2rem;
+	text-align: right;
 	border-radius: 25px;
+	background-color: var(--african-violet);
 	font-family: Antonio, Arial, Helvetica, sans-serif;
-	padding: 0 1vw 0 1vw;
-	border-left: 15px solid var(--butterscotch);
-	border-right: 15px solid var(--butterscotch);
 	text-transform: uppercase;
-	background: none;
-	color: var(--violet);
+	color: black;
+	line-height: normal !important;
 }
 
 button:active {
@@ -84,8 +84,9 @@ h4 {
 }
 
 p {
+	margin-block: 0 0;
 	font-family: 'Nunito Sans', Arial, Helvetica, sans-serif;
-	font-size: medium;
+	font-size: 0.60rem;
 	color: #FFF;
 }
 
@@ -117,4 +118,14 @@ fieldset {
 strong{
 	font-weight: 800;
 	color: var(--violet);
+}
+
+tr > th {
+	text-transform: uppercase;
+	font-family: 'Antonio', Arial, Helvetica, sans-serif;
+	padding: 0.5rem 0 0.5rem 0;
+}
+
+td {
+	padding: 0.5rem 0 0.5rem 0;
 }
