@@ -13,10 +13,8 @@ Object.keys(commands).forEach(function (command) {
 // Load and process data for keyboard/mouse/controller keys
 const keypresses = require('./data/keys.json');
 var keyList = []
-Object.keys(keypresses).forEach(function (keytype) {
-    Object.keys(keypresses[keytype]).forEach(function (key) {
+Object.keys(keypresses).forEach(function (key) {
         keyList.push(key);
-    });
 })
 
 export default function Editor() {
@@ -56,9 +54,8 @@ export default function Editor() {
     })
 
     const [bindName, setBindName] = useState("");
-    const [charOrKey, setCharOrKey] = useState("char")
-    const [finalString, setFinalString] = useState([])
-    const [bindMode, setBindMode] = useState("console");
+    const [charOrKey, setCharOrKey] = useState("char");
+    const [finalString, setFinalString] = useState([]);
 
     // Get saved commands from local storage or create empty array
 
@@ -219,11 +216,6 @@ export default function Editor() {
         });
     }
 
-    function changeBindMode(mode) {
-        setBindMode(mode);
-        buildBindStrings(bindMode);
-    }
-
     function handleSaveKeybind(e) {
         e.preventDefault();
 
@@ -258,17 +250,13 @@ export default function Editor() {
         setSavedKeybinds(bindsSurvivingDelete);
     }
 
-    function buildBindStrings(buildMode) {
+    function buildBindStrings() {
 
         let fullKeybindString = "";
 
         savedKeybinds.forEach((keybind) => {
             let commandIterator = 0;
             let singleKeybindString = "";
-
-            if (buildMode === "console") {
-                singleKeybindString += "/bind ";
-            }
 
             switch (keybind["keysettings"]["ctrl"]) {
                 case "noctrl":
@@ -324,11 +312,7 @@ export default function Editor() {
                 singleKeybindString += keybind.keysettings.keypress
             }
 
-            singleKeybindString += " "
-
-            if (buildMode === "file") {
-                singleKeybindString += "\""
-            }
+            singleKeybindString += " \""
 
             console.log("Should be about to iterate:")
             console.log(confirmedCommands)
@@ -342,7 +326,7 @@ export default function Editor() {
                         if (commandIterator > 0) {
                             singleKeybindString += " $$ "
                         }
-                        singleKeybindString += (command["commandname"] + " " + command.traynumber + " " + command.slotnumber + " ");
+                        singleKeybindString += (command["commandname"] + " " + (command.traynumber - 1) + " " + command.slotnumber + " ");
                         commandIterator++;
                         break;
                     case "Execute a power by name":
@@ -357,7 +341,7 @@ export default function Editor() {
                             if (commandIterator > 0) {
                                 singleKeybindString += " $$ "
                             }
-                            singleKeybindString += ("+TrayExecByTray " + command.traynumber + " " + i + " ");
+                            singleKeybindString += ("+TrayExecByTray " + (command.traynumber - 1) + " " + i + " ");
                             commandIterator++;
                         }
                         break;
@@ -366,7 +350,7 @@ export default function Editor() {
                             if (commandIterator > 0) {
                                 singleKeybindString += " $$ "
                             }
-                            singleKeybindString += ("+TrayExecByTray " + command.traynumber + " " + i + " ");
+                            singleKeybindString += ("+TrayExecByTray " + (command.traynumber - 1) + " " + i);
                             commandIterator++;
                         }
                         break;
@@ -386,12 +370,7 @@ export default function Editor() {
                 }
             })
 
-
-            if (buildMode === "file") {
-                singleKeybindString += "\"";
-            }
-
-            singleKeybindString += "\n";
+            singleKeybindString += "\"\n";
             fullKeybindString += singleKeybindString;
         })
 
@@ -400,29 +379,50 @@ export default function Editor() {
 
     // Bad use effect
     // eslint-disable-next-line
-    useEffect(() => buildBindStrings(bindMode), [savedKeybinds]);
+    useEffect(() => buildBindStrings(), [savedKeybinds]);
 
-    function  downloadTxtFile(e) {
+    function downloadTxtFile(e) {
         e.preventDefault();
         const element = document.createElement("a");
         let exportstring = finalString
-        const file = new Blob([exportstring], {type: 'text/plain'});
+        const file = new Blob([exportstring], { type: 'text/plain' });
         element.href = URL.createObjectURL(file);
         element.download = "keybindexport.txt";
         document.body.appendChild(element); // Required for this to work in FireFox
         element.click();
-      }
+    }
 
     // Return the page
     return (
         <>
-            <div id="editorcontainer">
-                <form className="editorform">
+            <form id="editor">
 
-                    <h1>Build your keybind</h1>
+                <h1>Build your keybind</h1>
 
-                    <section id="keysetter" className="formpart">
-                        <h2 className="sectiontitle"> Step one: select the key combination to use</h2>
+                <section id="keysetter" className="formpart">
+
+                    <h2 className="sectiontitle"> Step one: select the key combination to use</h2>
+
+                    <div id="charkey">
+                        <div id="charkeyradio">
+                            <input type="radio" value="char" name="charorkey" onChange={() => handleCharOrKey("char")} defaultChecked={true} />Use a character or numbers<br />
+                            <input type="radio" value="key" name="charorkey" onChange={() => handleCharOrKey("key")} />Use a special key
+                        </div>
+
+                        {charOrKey === "char" && <>
+                            <label htmlFor='keyselector' className="charkeylabel">Enter a number or letter (lowercase or uppercase): </label>
+                            <input className="charkeyinput" value={keySettings.keypress} type="text" name="keyselector" maxLength="1" onChange={(e) => setKeySettings({ ...keySettings, "keypress": e.target.value })} />
+                        </>}
+
+                        {charOrKey === "key" && <>
+                            <label htmlFor='keyselector' className="charkeylabel">Choose a key or button:</label>
+                            <select className="charkeyinput" name="keyselector" onChange={(e) => setKeySettings({ ...keySettings, "keypress": e.target.value })} >
+                                {keyList.map(x => <option value={x} key={x}>{x}</option>)}
+                            </select>
+                        </>}
+                    </div>
+
+                    <div className="combination-keys">
                         <div id="ctrlblock">
                             <label htmlFor='ctrlsetting'>CTRL Key:</label>
                             <fieldset name="ctrlsetting">
@@ -452,151 +452,131 @@ export default function Editor() {
                                 <input type="radio" value="rightalt" name="altsettinggroup" onChange={(e) => setKeySettings({ ...keySettings, "alt": e.target.value })} checked={keySettings.alt === "right"} /> Right alt key
                             </fieldset>
                         </div>
+                    </div>
 
-                        <div id="keyblock">
+                    <div id="keyconfirmation" className='inset-box'>
+                        Your key combination will be <strong>
+                            {keySettings.ctrl === "anyctrl" && <>Ctrl + </>} {keySettings.ctrl === "leftctrl" && <>Left Ctrl + </>} {keySettings.ctrl === "rightctrl" && <>Right Ctrl + </>} {keySettings.shift === "anyshift" && <>Shift + </>} {keySettings.shift === "leftshift" && <>Left Shift + </>} {keySettings.shift === "rightshift" && <>Right Shift + </>} {keySettings.alt === "anyalt" && <>Alt + </>} {keySettings.alt === "leftalt" && <>Left Alt + </>} {keySettings.alt === "rightalt" && <>Right Alt + </>} {keySettings.keypress}</strong>
+                    </div>
+                </section>
 
-                            <div id="charorkey-char"><input type="radio" value="char" name="charorkey" onChange={() => handleCharOrKey("char")} defaultChecked={true} />Use a character or numbers</div>
-                            <div id="charorkey-key"><input type="radio" value="key" name="charorkey" onChange={() => handleCharOrKey("key")} />Use a special key</div>
+                <section id="commandsetter" className="formpart">
+                    <h2 className="sectiontitle">Step Two: Set the commands to run</h2>
+                    <label htmlFor="commandselector">Choose a command:</label>
+                    <select name="commandselector" value={commandSettings.commandname} onChange={(e) => setCommandSettings({ ...commandSettings, "commandname": e.target.value })}>
+                        {commandList.map(x => <option value={x} key={x}>{x}</option>)}
+                    </select>
 
+                    {commandSettings.commandname === "Execute a single tray command" &&
+                        <>
+                            <div className="advanced-options">
+                                Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "traynumber": e.target.value })}></input>
+                                Slot number: <input type="number" name="slotnumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "slotnumber": e.target.value })}></input>
+                            </div>
+                        </>
+                    }
 
-                            {charOrKey === "char" && <>
-                                <label htmlFor='keyselector'>Enter a number or letter (lowercase or uppercase): </label>
-                                <input value={keySettings.keypress} type="text" name="keyselector" maxLength="1" onChange={(e) => setKeySettings({ ...keySettings, "keypress": e.target.value })} />
-                            </>}
+                    {commandSettings.commandname === "Execute a full tray" &&
+                        <>
+                            <div className="advanced-options">
+                                Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "traynumber": e.target.value })}></input>
+                            </div>
+                        </>
+                    }
 
+                    {commandSettings.commandname === "Execute a partial tray" &&
+                        <>
+                            <div className="advanced-options">
+                                Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "traynumber": e.target.value })}></input>
+                                Starting slot number: <input type="number" name="startslotnumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "startslotnumber": (e.target.value) })}></input>
+                                Ending slot number: <input type="number" name="endslotnumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "endslotnumber": e.target.value })}></input>
+                            </div>
+                        </>
+                    }
 
-                            {charOrKey === "key" && <>
-                                <label htmlFor='keyselector'>Choose a key or button:</label>
-                                <select name="keyselector" onChange={(e) => setKeySettings({ ...keySettings, "keypress": e.target.value })} >
-                                    {keyList.map(x => <option value={x} key={x}>{x}</option>)}
-                                </select>
-                            </>}
-                        </div>
+                    {commandSettings.commandname === "Execute a power by name" &&
+                        <>
+                            <div className="advanced-options">
+                                Power name: <input type="text" name="powername" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "powername": e.target.value })}></input>
+                            </div>
+                            <div className="warning-box">Make sure you enter the power name exactly as it appears in game (including punctuation and symbols) or this will not work.</div>
+                        </>
+                    }
 
-                        <div id="keyconfirmation">
-                            Your key combination will be <strong>
-                                {keySettings.ctrl === "anyctrl" && <>Ctrl + </>} {keySettings.ctrl === "leftctrl" && <>Left Ctrl + </>} {keySettings.ctrl === "rightctrl" && <>Right Ctrl + </>} {keySettings.shift === "anyshift" && <>Shift + </>} {keySettings.shift === "leftshift" && <>Left Shift + </>} {keySettings.shift === "rightshift" && <>Right Shift + </>} {keySettings.alt === "anyalt" && <>Alt + </>} {keySettings.alt === "leftalt" && <>Left Alt + </>} {keySettings.alt === "rightalt" && <>Right Alt + </>} {keySettings.keypress}</strong>
-                        </div>
-                    </section>
+                    {commandSettings.commandname === "Adjust throttle by percentage" &&
+                        <>
+                            Throttle change percentage: <input type="number" name="throttlechange" min="-100" max="100" onChange={(e) => setCommandSettings({ ...commandSettings, "throttleadjust": (e.target.value) })}></input>
+                            <div className="warning-box">Use -100 for reverse throttle by 100%, and 100 for increase throttle by 100%.</div>
+                        </>
+                    }
 
-                    <section id="commandsetter" className="formpart">
-                        <h2 className="sectiontitle">Step Two: Set the commands to run</h2>
-                        <label htmlFor="commandselector">Choose a command:</label>
-                        <select name="commandselector" value={commandSettings.commandname} onChange={(e) => setCommandSettings({ ...commandSettings, "commandname": e.target.value })}>
-                            {commandList.map(x => <option value={x} key={x}>{x}</option>)}
-                        </select>
+                    <button onClick={handleAddCommand}>Add this command to the keybind</button>
+                    <br />
 
-                        {commandSettings.commandname === "Execute a single tray command" &&
+                    <div id="currentcommandslist" className='inset-box'>
+                        <p>The following commands will be run when you activate the keybind:</p>
+                        {confirmedCommands.map((item) =>
                             <>
-                                <div className="advanced-options">
-                                    Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "traynumber": e.target.value })}></input>
-                                    Slot number: <input type="number" name="slotnumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "slotnumber": e.target.value })}></input>
-                                </div>
-                            </>
+                                <span className="commanddetails">
+                                    {item.commandname}
+                                    {item.commandname === "Execute a partial tray" && <> - Tray {item.traynumber}, slots {item.startslotnumber} to {item.endslotnumber} </>}
+                                    {item.commandname === "Execute a full tray" && <> - Tray {item.traynumber}</>}
+                                    {item.commandname === "Execute a single tray command" && <> - Tray {item.traynumber}, slot {item.slotnumber}</>}
+                                    {item.commandname === "Execute a power by name" && <> - Power name: {item.powername}</>}
+                                    {item.commandname === "Adjust throttle by percentage" && <> - Throttle Percentage change {item.throttleadjust}%</>}
+                                </span>
+                                <button className="removeitembutton" key={item.commandname} data-traynumber={item.traynumber} data-startslotnumber={item.startslotnumber} data-endslotnumber={item.endslotnumber} data-powername={item.powername} data-slotnumber={item.slotnumber} value={item.commandname} onClick={handleRemoveCommand}>Remove</button><br />
+                            </>)
                         }
+                    </div>
 
-                        {commandSettings.commandname === "Execute a full tray" &&
+                </section>
+
+                <section id="keybindsummary" className="formpart">
+
+                    <h2 className="sectiontitle">Name and save your keybind</h2>
+
+                    Keybind name: <input type="text" onChange={(e) => setBindName(e.target.value)} value={bindName}></input><br /><br />
+                    <button onClick={handleSaveKeybind}>Save this keybind</button>
+
+                    <h3>Your saved keybinds</h3>
+
+                    <table id="savedcommandtable">
+                        <tr>
+                            <th>Keybind Name</th>
+                            <th>Keypress</th>
+                            <th></th>
+                        </tr>
+
+                        {savedKeybinds.map((item) =>
                             <>
-                                <div className="advanced-options">
-                                    Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "traynumber": e.target.value })}></input>
-                                </div>
-                            </>
+                                <tr>
+                                    <td>{item.bindname}</td>
+                                    <td>{item.keysettings.ctrl === "anyctrl" && <>Ctrl + </>} {item.keysettings.ctrl === "leftctrl" && <>Left Ctrl + </>} {item.keysettings.ctrl === "rightctrl" && <>Right Ctrl + </>} {item.keysettings.shift === "anyshift" && <>Shift + </>} {item.keysettings.shift === "leftshift" && <>Left Shift + </>} {item.keysettings.shift === "rightshift" && <>Right Shift + </>} {item.keysettings.alt === "anyalt" && <>Alt + </>} {item.keysettings.alt === "leftalt" && <>Left Alt + </>} {item.keysettings.alt === "rightalt" && <>Right Alt + </>} {item.keysettings.keypress}</td>
+                                    <td><button className="removeitembutton" value={item.bindname} key={item.bindname} onClick={handleDeleteSavedKeybind}>Remove</button><br /></td>
+                                </tr>
+                            </>)
                         }
+                    </table>
+                </section>
 
-                        {commandSettings.commandname === "Execute a partial tray" &&
-                            <>
-                                <div className="advanced-options">
-                                    Tray number: <input type="number" name="traynumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "traynumber": e.target.value })}></input>
-                                    Starting slot number: <input type="number" name="startslotnumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "startslotnumber": (e.target.value) })}></input>
-                                    Ending slot number: <input type="number" name="endslotnumber" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "endslotnumber": e.target.value })}></input>
-                                </div>
-                            </>
-                        }
+                <section id="exportsection" className="formpart">
 
-                        {commandSettings.commandname === "Execute a power by name" &&
-                            <>
-                                <div className="advanced-options">
-                                    Power name: <input type="text" name="powername" min="1" max="10" onChange={(e) => setCommandSettings({ ...commandSettings, "powername": e.target.value })}></input>
-                                </div>
-                                <div className="inline-warning">Make sure you enter the power name exactly as it appears in game (including punctuation and symbols) or this will not work.</div>
-                            </>
-                        }
+                    <h2>Export your keybinds</h2>
 
-                        {commandSettings.commandname === "Adjust throttle by percentage" &&
-                            <>
-                                Throttle change percentage: <input type="number" name="throttlechange" min="-100" max="100" onChange={(e) => setCommandSettings({ ...commandSettings, "throttleadjust": (e.target.value) })}></input>
-                                <div className="inline-warning">Use -100 for reverse throttle by 100%, and 100 for increase throttle by 100%.</div>
-                            </>
-                        }
+                    <div className="advice-box">
+                        <p>You can see below the binds that will be included in your file. Click the button to download your keybinds as a text file. From the game, enter the following command in the chat window (as if you were typing a message) - change the location of the file depending on where you have the file saved to:</p>
+                        <pre>/bind_load_file C:\Users\MyName\Downloads\keybinds.txt</pre>
+                        <p>Once you have done this, your keybinds will be saved to your STO configuration and will be ready for use. You may wish to test them out before jumping into a TFO to ensure they work as you were expecting!</p>
+                    </div>
 
-                        <button onClick={handleAddCommand}>Add this command to the keybind</button>
-                        <br />
-                        <div id="currentcommandslist">
-                            <h4>Commands to be added to this keybind:</h4>
-                            {confirmedCommands.map((item) =>
-                                <>
-                                    <span className="commanddetails">
-                                        {item.commandname}
-                                        {item.commandname === "Execute a partial tray" && <> - Tray {item.traynumber}, slots {item.startslotnumber} to {item.endslotnumber} </>}
-                                        {item.commandname === "Execute a full tray" && <> - Tray {item.traynumber}</>}
-                                        {item.commandname === "Execute a single tray command" && <> - Tray {item.traynumber}, slot {item.slotnumber}</>}
-                                        {item.commandname === "Execute a power by name" && <> - Power name: {item.powername}</>}
-                                        {item.commandname === "Adjust throttle by percentage" && <> - Throttle Percentage change {item.throttleadjust}%</>}
-                                    </span>
-                                    <button className="removeitembutton" key={item.commandname} data-traynumber={item.traynumber} data-startslotnumber={item.startslotnumber} data-endslotnumber={item.endslotnumber} data-powername={item.powername} data-slotnumber={item.slotnumber} value={item.commandname} onClick={handleRemoveCommand}>Remove</button><br />
-                                </>)
-                            }
-                        </div>
+                    <div id="finalstring">
+                        {(finalString.length === 0 && <>Nothing to export!</>) || finalString}
+                    </div>
 
-                    </section>
-
-                    <section id="keybindsummary" className="formpart">
-
-                        <h2 className="sectiontitle">Name and save your keybind</h2>
-
-                        Keybind name: <input type="text" onChange={(e) => setBindName(e.target.value)} value={bindName}></input><br /><br />
-                        <button onClick={handleSaveKeybind}>Save this keybind</button>
-
-                        <h3>Your saved keybinds</h3>
-
-                        <table id="savedcommandtable">
-                            <tr>
-                                <th>Keybind Name</th>
-                                <th>Keypress</th>
-                                <th></th>
-                            </tr>
-
-                            {savedKeybinds.map((item) =>
-                                <>
-                                    <tr>
-                                        <td>{item.bindname}</td>
-                                        <td>{item.keysettings.ctrl === "anyctrl" && <>Ctrl + </>} {item.keysettings.ctrl === "leftctrl" && <>Left Ctrl + </>} {item.keysettings.ctrl === "rightctrl" && <>Right Ctrl + </>} {item.keysettings.shift === "anyshift" && <>Shift + </>} {item.keysettings.shift === "leftshift" && <>Left Shift + </>} {item.keysettings.shift === "rightshift" && <>Right Shift + </>} {item.keysettings.alt === "anyalt" && <>Alt + </>} {item.keysettings.alt === "leftalt" && <>Left Alt + </>} {item.keysettings.alt === "rightalt" && <>Right Alt + </>} {item.keysettings.keypress}</td>
-                                        <td><button className="removeitembutton" value={item.bindname} key={item.bindname} onClick={handleDeleteSavedKeybind}>Remove</button><br /></td>
-                                    </tr>
-                                </>)
-                            }
-                        </table>
-                    </section>
-
-                    <section id="exportsection" className="formpart">
-
-                        <h2>Export your keybinds</h2>
-
-                        {bindMode === "console" && <><div className="advice-box">To use bind commands in the console (the game's chat box), copy and individual command that starts with "/bind", paste it into your chat and press enter. The bind will automatically save and become part of that character's keybinds.</div></>}
-                        <div name="bindmodesetter" id="bindmodesetter">
-                            <input type="radio" value="console" name="bindmodesetter" onChange={() => changeBindMode("console")} checked={bindMode === "console"} /> Chat box command mode<br />
-                            <input type="radio" value="file" name="bindmodesetter" onChange={() => changeBindMode("file")} checked={bindMode === "file"}/> Bind file mode
-                        </div>
-
-                        <div id="finalstring">
-                            {(finalString.length === 0 && <>Nothing to export!</>) || finalString}
-                        </div>
-
-                        <button onClick={handleCopyString}>Copy Bind String</button>
-                        {bindMode === "file" && finalString.length !== 0 && <><button onClick={downloadTxtFile}>Download txt</button></>}
-                    </section>
-                </form>
-            </div>
+                    {finalString.length !== 0 && <><button onClick={handleCopyString}>Copy Bind String</button><button onClick={downloadTxtFile}>Download Keybind File (.txt)</button></>}
+                </section>
+            </form>
 
             <ToastContainer />
         </>

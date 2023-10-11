@@ -1,5 +1,4 @@
 {
-    "navKeys": {
         "Space bar": "Space",
         "Enter": "enter",
         "Tab": "Tab",
@@ -8,17 +7,13 @@
         "Home": "Home",
         "Insert": "insert",
         "Scroll lock": "Scroll",
-        "Num lock": "NumLock"
-    },
-    "arrowKeys": {
+        "Num lock": "NumLock",
         "Down arrow key": "Down",
         "Up arrow key": "Up",
         "Left arrow key": "Left",
         "Right arrow key": "Right",
         "Page Down": "PageDown",
-        "Page Up": "PageUp"
-    },
-    "mouseButtons": {
+        "Page Up": "PageUp",
         "Left mouse button": "Lbutton",
         "Right mouse button": "Rbutton",
         "Left mouse button double click": "Leftdoubleclick",
@@ -35,9 +30,7 @@
         "Mouse button 7": "Button7",
         "Mouse button 8": "Button8",
         "Mouse button 9": "Button9",
-        "Mouse button 10": "Button10"
-    },
-    "shiftCtrlAltKeys": {
+        "Mouse button 10": "Button10",
         "Left control": "LCTRL",
         "Right control": "RCTRL",
         "Shift (any)": "Shift",
@@ -45,9 +38,7 @@
         "Right shift": "RShift",
         "Alt (any)": "ALT",
         "Left alt": "LALT",
-        "Right alt": "RALT"
-    },
-    "functionKeys": {
+        "Right alt": "RALT",
         "F1": "F1",
         "F2": "F2",
         "F3": "F3",
@@ -71,9 +62,7 @@
         "F21": "F21",
         "F22": "F22",
         "F23": "F23",
-        "F24": "F24"
-    },
-    "numpadKeys": {
+        "F24": "F24",
         "Numpad 0": "numpad0",
         "Numpad 1": "numpad1",
         "Numpad 2": "numpad2",
@@ -89,9 +78,7 @@
         "Numpad /": "Divide",
         "Numpad *": "Multiply",
         "Numpad .": "Decimal",
-        "Numpad Enter": "numpadenter"
-    },
-    "joystickButtons": {
+        "Numpad Enter": "numpadenter",
         "A Button (Xbox)": "Joy9 XBOX Contr",
         "B Button (Xbox)": "Joy10 XBOX Contr",
         "X Button (Xbox)": "Joy11 XBOX Contr",
@@ -116,5 +103,4 @@
         "Right stick down": "Rstick_down XBOX Contr",
         "Right stick left": "Rstick_left XBOX Contr",
         "Right stick right": "Rstick_right XBOX Contr"
-    }
 }
