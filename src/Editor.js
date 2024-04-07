@@ -581,7 +581,7 @@ export default function Editor() {
 
                     <div className="inset-box">
                         <p>You can see below the binds that will be included in your file. Click the button to download your keybinds as a text file. From the game, enter the following command in the chat window (as if you were typing a message) - change the location of the file depending on where you have the file saved to:</p>
-                        <pre>/bind_load_file C:\Users\MyName\Downloads\keybinds.txt</pre>
+                        <pre>/bindloadfile C:\Users\MyName\Downloads\keybinds.txt</pre>
                         <p>Once you have done this, your keybinds will be saved to your STO configuration and will be ready for use. You may wish to test them out before jumping into a TFO to ensure they work as you were expecting!</p>
                     </div>
 
